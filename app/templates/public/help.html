@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Help, Contact &amp; Reporting — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="help-heading">
+    <div class="container-narrow">
+      <span class="eyebrow">Support &amp; Incident Escalation</span>
+      <h1 id="help-heading" class="page-heading">Help, Support &amp; Suspicious Listing Reports</h1>
+      <p class="lead-copy">
+        Need help with your account, want to report a misleading job post, or need to request account deletion? Use the channels below.
+      </p>
+
+      <div class="dual-manifesto" style="margin-bottom: var(--space-6);">
+        <div class="manifesto-sheet">
+          <span class="eyebrow">Urgent Safety &amp; Fraud Reports</span>
+          <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">
+            Report a Suspicious Job or Employer
+          </h2>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+            If an employer asks for money, misstates the wage, or operates from an unsafe location, use the <strong>Report Listing</strong> button directly on the job details page or contact our moderation desk:
+          </p>
+          <p style="font-family: var(--font-mono); font-size: var(--text-sm); margin-bottom: 0;">
+            Email: <strong>safety@earnandpay.in</strong>
+          </p>
+        </div>
+
+        <div class="manifesto-sheet manifesto-sheet-employer">
+          <span class="eyebrow">Account &amp; Privacy Requests</span>
+          <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">
+            General Support &amp; Account Deletion
+          </h2>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+            For password recovery assistance, employer verification inquiries, or formal account and data deletion requests:
+          </p>
+          <p style="font-family: var(--font-mono); font-size: var(--text-sm); margin-bottom: 0;">
+            Email: <strong>support@earnandpay.in</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="policy-content">
+        <h2 class="section-heading">How Moderation Works</h2>
+        <ol style="line-height: 1.7; color: var(--color-text-secondary);">
+          <li><strong>Submit a Report:</strong> Flag any job or profile with a specific reason (<em>Fee demand, Misleading wage, Fake job, Harassment, Unsafe workplace</em>).</li>
+          <li><strong>Moderator Investigation:</strong> Our administrative team reviews the listing history and reporter details in a restricted moderation queue.</li>
+          <li><strong>Recorded Outcome:</strong> Violating listings are hidden and offending accounts are suspended, with every action recorded in our immutable security audit log.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+{% endblock %}

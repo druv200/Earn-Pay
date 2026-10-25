@@ -1,0 +1,45 @@
+[project]
+name = "earn-and-pay"
+version = "0.1.0"
+description = "Earn & Pay — Hyper-local employment and temporary-work marketplace MVP"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "postgres: marks tests that verify live PostgreSQL server features",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "migrations",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit security checks
+    "UP",  # pyupgrade
+]
+ignore = [
+    "S101", # allow assert in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}500 Unexpected Error — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow" style="color: var(--color-status-danger-text);">ERROR 500 — SERVER ERROR</span>
+        <h1 class="page-heading">Something went wrong on our side.</h1>
+        <p style="color: var(--color-text-secondary);">
+          Your data is safe and any incomplete database changes were rolled back automatically. Please try again in a moment.
+        </p>
+        <div style="margin-top: var(--space-5); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Earn &amp; Pay Home</a>
+          <a href="{{ url_for('public.help_contact') }}" class="btn btn-secondary">Report Issue</a>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="policy-layout">
+      <aside class="policy-toc" aria-label="Terms of Service Sections">
+        <span class="eyebrow">Contents</span>
+        <ul class="footer-links" style="margin-top: var(--space-2);">
+          <li><a href="#marketplace-role" style="color: var(--color-text-primary);">1. Role of the Platform</a></li>
+          <li><a href="#employer-obligations" style="color: var(--color-text-primary);">2. Employer Obligations</a></li>
+          <li><a href="#worker-obligations" style="color: var(--color-text-primary);">3. Worker Obligations</a></li>
+          <li><a href="#no-wallet" style="color: var(--color-text-primary);">4. Payments &amp; No Wallet</a></li>
+          <li><a href="#moderation" style="color: var(--color-text-primary);">5. Reporting &amp; Moderation</a></li>
+        </ul>
+      </aside>
+
+      <article class="policy-content" aria-labelledby="terms-heading">
+        <span class="eyebrow">Platform Rules &amp; Responsibilities</span>
+        <h1 id="terms-heading" class="page-heading">Terms of Service</h1>
+        <p class="lead-copy">
+          By registering for or using Earn &amp; Pay, you agree to abide by these marketplace rules designed to keep local hiring transparent and safe.
+        </p>
+
+        <h2 id="marketplace-role" class="section-heading">1. Role of the Platform</h2>
+        <p>
+          Earn &amp; Pay is a discovery and application-tracking marketplace connecting job seekers and local employers. Earn &amp; Pay is not an employer, staffing agency, or guarantor of employment. We do not guarantee that any worker will be hired or that any employer will fill a vacancy.
+        </p>
+
+        <h2 id="employer-obligations" class="section-heading">2. Employer Obligations</h2>
+        <p>
+          Employers must provide truthful business details and state accurate wages, payment frequencies, working hours, responsibilities, and workplace locations. Demanding registration fees, deposits, or unlawful kickbacks from workers is strictly prohibited and results in immediate account suspension.
+        </p>
+
+        <h2 id="worker-obligations" class="section-heading">3. Worker Obligations</h2>
+        <p>
+          Workers must provide accurate skill and availability information, apply only to roles they intend to consider in good faith, and use the withdrawal feature if their availability changes.
+        </p>
+
+        <h2 id="no-wallet" class="section-heading">4. Payments &amp; No Internal Wallet</h2>
+        <p>
+          Earn &amp; Pay does not hold customer funds, operate an escrow wallet, or process wage disbursements in the MVP. Employers are directly responsible for paying workers in compliance with applicable Indian labor and wage laws.
+        </p>
+
+        <h2 id="moderation" class="section-heading">5. Reporting &amp; Moderation</h2>
+        <p>
+          Platform administrators reserve the right to hide misleading job listings, investigate user reports, and suspend accounts that violate safety rules or attempt unauthorized access.
+        </p>
+      </article>
+    </div>
+  </div>
+{% endblock %}

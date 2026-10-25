@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}404 Page Not Found — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">ERROR 404 — NOT FOUND</span>
+        <h1 class="page-heading">We could not find that page or job listing.</h1>
+        <p style="color: var(--color-text-secondary);">
+          The link may have expired, the vacancy may have been closed or removed, or the address was typed incorrectly.
+        </p>
+        <div style="margin-top: var(--space-5); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Earn &amp; Pay Home</a>
+          <a href="{{ url_for('public.index') }}#live-jobs" class="btn btn-secondary">Browse Live Jobs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

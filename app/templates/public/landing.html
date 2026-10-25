@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import job_ledger_row, safety_notice_banner, empty_state %}
+
+{% block title %}Earn &amp; Pay — Find Work. Earn Money. Build Your Future.{% endblock %}
+
+{% block content %}
+  {# 1. Asymmetric Editorial Broadsheet Hero & Role-Aware Action Dispatcher #}
+  <section class="hero-editorial" aria-labelledby="hero-heading">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow">
+            Local Employment &amp; Daily-Wage Marketplace • {{ config.get('LAUNCH_CITY', 'Bengaluru') }}
+          </span>
+          <h1 id="hero-heading" class="display-heading">
+            Find Work. Earn Money. Build Your Future.
+          </h1>
+          <p class="lead-copy">
+            Discover nearby part-time, temporary, and daily-wage roles with transparent wages, working hours, and shift responsibilities stated upfront—or hire reliable local workers for your shop, restaurant, or small business.
+          </p>
+
+          <div id="get-started" class="hero-cta-group" role="group" aria-label="Primary Marketplace Actions">
+            {% if current_user and current_user.is_authenticated and current_user.is_employer %}
+              <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-primary">
+                Find Workers
+              </a>
+              <a href="{{ url_for('jobs.create_job') }}" class="btn btn-navy">
+                Post a Job
+              </a>
+              <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary">
+                Employer Dashboard
+              </a>
+            {% elif current_user and current_user.is_authenticated and current_user.is_worker %}
+              <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-primary">
+                Find Local Work
+              </a>
+              <a href="{{ url_for('profiles.worker_dashboard') }}" class="btn btn-navy">
+                My Applications
+              </a>
+            {% else %}
+              <a href="{{ url_for('public.index', find_work='1') }}" class="btn btn-primary">
+                Find Local Work
+              </a>
+              <a href="{{ url_for('auth.register', role='employer') }}" class="btn btn-navy">
+                Hire Workers
+              </a>
+            {% endif %}
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-sm); color: var(--color-text-secondary);">
+            <span><strong>✓ Upfront Pay Terms:</strong> Hourly, daily, weekly, or monthly</span>
+            <span><strong>✓ Status Tracking:</strong> Know if your application is seen or accepted</span>
+          </div>
+        </div>
+
+        {# Right Column: Role-Aware Dispatcher Panel #}
+        <aside class="hero-dispatcher-panel" aria-labelledby="search-panel-heading">
+          {% if current_user and current_user.is_authenticated and current_user.is_employer %}
+            <div class="dispatcher-header">
+              <h2 id="search-panel-heading" style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+                Find Available Workers
+              </h2>
+              <span class="badge badge-category">
+                {% if available_worker_count > 0 %}
+                  {{ available_worker_count }} {{ 'Worker' if available_worker_count == 1 else 'Workers' }} Available
+                {% else %}
+                  0 Available
+                {% endif %}
+              </span>
+            </div>
+
+            <form action="{{ url_for('profiles.find_workers') }}" method="get" class="search-bar-form" role="search">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="search-worker-skill" class="form-label">Skill or Keyword</label>
+                <input
+                  type="search"
+                  id="search-worker-skill"
+                  name="q"
+                  class="form-input"
+                  placeholder="e.g., Billing, cooking, packing, Kannada"
+                >
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="search-worker-location" class="form-label">Neighborhood or 6-Digit Pincode</label>
+                <input
+                  type="text"
+                  id="search-worker-location"
+                  name="location"
+                  class="form-input"
+                  placeholder="e.g., Jayanagar, Indiranagar, 560041"
+                >
+              </div>
+
+              <div class="form-group" style="margin-bottom: var(--space-2);">
+                <label for="search-worker-category" class="form-label">Work Category</label>
+                <select id="search-worker-category" name="category" class="form-select">
+                  <option value="">All Local Categories</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;" data-loading-text="Searching Workers...">
+                Find Workers
+              </button>
+            </form>
+          {% elif current_user and current_user.is_authenticated and (current_user.is_worker or current_user.is_admin) %}
+            <div class="dispatcher-header">
+              <h2 id="search-panel-heading" style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+                Search Local Vacancies
+              </h2>
+              <span class="badge badge-category">{{ live_job_count }} Active</span>
+            </div>
+
+            <form action="{{ url_for('jobs.job_discovery') }}" method="get" class="search-bar-form" role="search">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="search-keyword" class="form-label">Job Title or Skill</label>
+                <input
+                  type="search"
+                  id="search-keyword"
+                  name="q"
+                  value="{{ search_query }}"
+                  class="form-input"
+                  placeholder="e.g., Store helper, billing, kitchen assistant, delivery"
+                >
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="search-location" class="form-label">Neighborhood or 6-Digit Pincode</label>
+                <input
+                  type="text"
+                  id="search-location"
+                  name="location"
+                  value="{{ selected_location }}"
+                  class="form-input"
+                  placeholder="e.g., Jayanagar, Indiranagar, 560041"
+                >
+              </div>
+
+              <div class="form-group" style="margin-bottom: var(--space-2);">
+                <label for="search-category" class="form-label">Job Category</label>
+                <select id="search-category" name="category" class="form-select">
+                  <option value="">All Local Categories</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                      {{ cat }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;" data-loading-text="Searching Jobs...">
+                Search Opportunities
+              </button>
+            </form>
+          {% else %}
+            <div class="dispatcher-header">
+              <h2 id="search-panel-heading" style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+                Member Job &amp; Worker Access
+              </h2>
+              <span class="badge badge-category">Sign In Required</span>
+            </div>
+
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: 0; margin-bottom: var(--space-4);">
+              Register or sign in to access live local job listings as a <strong>Worker</strong> or browse available local talent as an <strong>Employer</strong>.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+              <a href="{{ url_for('auth.register', role='worker') }}" class="btn btn-primary" style="width: 100%; text-align: center;">
+                Register as a Worker (Find Work)
+              </a>
+              <a href="{{ url_for('auth.register', role='employer') }}" class="btn btn-navy" style="width: 100%; text-align: center;">
+                Register as an Employer (Hire Workers)
+              </a>
+              <a href="{{ url_for('auth.login') }}" class="btn btn-secondary" style="width: 100%; text-align: center;">
+                Already Registered? Sign In
+              </a>
+            </div>
+          {% endif %}
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {# 2. Role-Aware Marketplace Section #}
+  {% if current_user and current_user.is_authenticated and (current_user.is_worker or current_user.is_admin) %}
+    <section id="live-jobs" class="section-block" aria-labelledby="live-jobs-heading">
+      <div class="container">
+        <div class="section-header" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4);">
+          <div>
+            <span class="eyebrow">Live Marketplace Ledger</span>
+            <h2 id="live-jobs-heading" class="section-heading" style="margin-bottom: 0;">
+              Selected Local Job Opportunities
+            </h2>
+          </div>
+          <p style="margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary);">
+            Every listing displays exact wage amount, payment frequency, working hours, and pincode before you apply.
+          </p>
+        </div>
+
+        {% if selected_jobs %}
+          <div class="job-ledger" role="feed" aria-label="Published local job listings">
+            {% for job in selected_jobs %}
+              {{ job_ledger_row(job, detail_url=url_for('jobs.job_detail', job_id=job.id)) }}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state(
+            title="No local jobs available yet.",
+            message="New opportunities will appear here when employers publish their first listings. Please check again soon.",
+            action_url=url_for('jobs.job_discovery'),
+            action_label="Open Job Search & Filters"
+          ) }}
+        {% endif %}
+
+        {{ safety_notice_banner() }}
+      </div>
+    </section>
+  {% elif current_user and current_user.is_authenticated and current_user.is_employer %}
+    <section id="employer-overview" class="section-block" aria-labelledby="employer-overview-heading">
+      <div class="container">
+        <div class="trust-charter">
+          <span class="eyebrow">Employer Hiring Hub</span>
+          <h2 id="employer-overview-heading" class="section-heading">
+            {% if available_worker_count > 0 %}
+              {{ available_worker_count }} {{ 'worker' if available_worker_count == 1 else 'workers' }} available in your area
+            {% else %}
+              No workers are currently available. Check back as more people join Earn &amp; Pay.
+            {% endif %}
+          </h2>
+          <p style="max-width: 70ch; color: var(--color-text-secondary); margin-bottom: var(--space-4);">
+            Browse discoverable worker profiles filtered by skill, pincode, category, and shift availability, or publish a structured vacancy from your Employer Dashboard.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
+            <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-primary">Find Workers</a>
+            <a href="{{ url_for('jobs.create_job') }}" class="btn btn-navy">Post a Job</a>
+            <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary">Employer Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  {% else %}
+    <section id="live-jobs" class="section-block" aria-labelledby="live-jobs-heading">
+      <div class="container">
+        {{ empty_state(
+          title="Register or Sign In to Discover Local Jobs",
+          message="Live job search, shift terms, and one-click applications are available exclusively to registered Worker accounts. Employers can register to post vacancies and search available workers.",
+          action_url=url_for('auth.register', role='worker'),
+          action_label="Create a Worker Account"
+        ) }}
+        {{ safety_notice_banner() }}
+      </div>
+    </section>
+  {% endif %}
+
+  {# 3. How the Platform Works (Structured 4-Step Editorial Strip) #}
+  <section id="how-it-works" class="section-block" aria-labelledby="how-heading">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow">Transparent Workflow</span>
+        <h2 id="how-heading" class="section-heading">How Earn &amp; Pay Works</h2>
+        <p class="lead-copy" style="margin-bottom: 0;">
+          No informal guesswork or unanswered phone calls. Every step is recorded clearly for both workers and employers.
+        </p>
+      </div>
+
+      <div class="process-strip">
+        <div class="process-step">
+          <span class="step-number">STEP 01</span>
+          <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Create a Role Profile</h3>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+            Workers list their skills, preferred neighborhood/pincode, availability, and expected daily wage. Employers set up their shop or business profile.
+          </p>
+        </div>
+
+        <div class="process-step">
+          <span class="step-number">STEP 02</span>
+          <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Compare Clear Job Terms</h3>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+            Every job post requires upfront wage amount (₹), payment schedule (hourly, daily, weekly, monthly), shift hours, responsibilities, and deadline.
+          </p>
+        </div>
+
+        <div class="process-step">
+          <span class="step-number">STEP 03</span>
+          <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Apply &amp; Track Progress</h3>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+            Workers apply in one click and see real-time status updates: <em>Applied, Under Review, Shortlisted, Interview Scheduled, Accepted,</em> or <em>Rejected</em>.
+          </p>
+        </div>
+
+        <div class="process-step">
+          <span class="step-number">STEP 04</span>
+          <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Direct Local Hiring</h3>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+            Employers review candidate summaries, schedule interviews, and fill vacancies directly. Suspicious listings can be reported anytime.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# 4. Separate Benefits for Workers and Employers #}
+  <section id="for-employers" class="section-block" aria-labelledby="benefits-heading">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow">Built for Both Sides of Local Work</span>
+        <h2 id="benefits-heading" class="section-heading">Why Workers and Local Businesses Use Earn &amp; Pay</h2>
+      </div>
+
+      <div class="dual-manifesto">
+        <article class="manifesto-sheet" aria-labelledby="worker-benefits-title">
+          <span class="eyebrow">For Workers &amp; Job Seekers</span>
+          <h3 id="worker-benefits-title" style="font-family: var(--font-display); font-size: var(--text-h2);">
+            Dignified Local Work Without Hidden Terms
+          </h3>
+          <ul class="checklist">
+            <li><strong>Know the Pay Before You Travel:</strong> See exact daily, hourly, or monthly wages and working hours before spending time or bus fare.</li>
+            <li><strong>Hyper-Local Discovery:</strong> Filter by your neighborhood or 6-digit pincode to find shifts close to home.</li>
+            <li><strong>No More Application Black Holes:</strong> Track whether an employer has reviewed, shortlisted, or accepted your application.</li>
+            <li><strong>Privacy Controls:</strong> Choose whether your phone number is visible to employers on your public profile.</li>
+          </ul>
+          {% if current_user and current_user.is_authenticated and current_user.is_worker %}
+            <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-primary">Find Local Work</a>
+          {% elif not (current_user and current_user.is_authenticated and current_user.is_employer) %}
+            <a href="{{ url_for('auth.register', role='worker') }}" class="btn btn-primary">Register as a Worker</a>
+          {% endif %}
+        </article>
+
+        <article class="manifesto-sheet manifesto-sheet-employer" aria-labelledby="employer-benefits-title">
+          <span class="eyebrow">For Shops, Restaurants &amp; Small Businesses</span>
+          <h3 id="employer-benefits-title" style="font-family: var(--font-display); font-size: var(--text-h2);">
+            Hire Reliable Local Staff in One Workspace
+          </h3>
+          <ul class="checklist">
+            <li><strong>Publish Structured Vacancies:</strong> Specify shift hours, required skills, pay frequency, and number of openings in minutes.</li>
+            <li><strong>Compare Local Candidates:</strong> View candidate skills, experience summaries, availability, and location match in one ledger.</li>
+            <li><strong>Streamlined Hiring Actions:</strong> Shortlist applicants, record interview details, and auto-close jobs once vacancies are filled.</li>
+            <li><strong>Documented Verification Option:</strong> Complete our verification review to display a truthful <em>Verified Employer</em> badge.</li>
+          </ul>
+          {% if current_user and current_user.is_authenticated and current_user.is_employer %}
+            <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-navy">Find Workers</a>
+          {% else %}
+            <a href="{{ url_for('auth.register', role='employer') }}" class="btn btn-navy">Hire Workers</a>
+          {% endif %}
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {# 5. Trust & Safety Safeguards #}
+  <section class="section-block" aria-labelledby="trust-heading">
+    <div class="container">
+      <div class="trust-charter">
+        <span class="eyebrow">Trust, Safety &amp; Honest Verification</span>
+        <h2 id="trust-heading" class="section-heading">How We Protect Marketplace Integrity</h2>
+        <p style="max-width: 72ch; color: var(--color-text-secondary);">
+          Earn &amp; Pay is built on truthful disclosures. We do not claim that every employer is vetted automatically, nor do we promise guaranteed employment. Instead, we enforce concrete technical and moderation safeguards:
+        </p>
+
+        <div class="trust-grid">
+          <div>
+            <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">1. Honest Verification Badges</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0;">
+              An employer receives a <strong>Verified Employer</strong> label only after our team documents and verifies their business details. Unverified listings are clearly labeled so workers can exercise caution.
+            </p>
+          </div>
+
+          <div>
+            <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">2. Mandatory Wage Disclosure</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0;">
+              Employers cannot publish a job without specifying a positive numeric wage, payment frequency, working hours, location, and vacancy count.
+            </p>
+          </div>
+
+          <div>
+            <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">3. Suspicious Listing Reports</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0;">
+              Any user can report listings that demand registration fees, misrepresent wages, or feel unsafe. Moderators review every report with an immutable audit trail.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# 6. Frequently Asked Questions #}
+  <section class="section-block" style="border-bottom: none;" aria-labelledby="faq-heading">
+    <div class="container-narrow">
+      <div class="section-header">
+        <span class="eyebrow">Common Questions</span>
+        <h2 id="faq-heading" class="section-heading">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary class="faq-summary">Does Earn &amp; Pay charge workers to search or apply for jobs?</summary>
+          <div class="faq-body">
+            <p>No. Searching for jobs, creating a worker profile, and submitting applications on Earn &amp; Pay is 100% free for workers. Never pay anyone claiming to collect a registration or placement fee.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">Does Earn &amp; Pay hold wages or provide an in-app wallet?</summary>
+          <div class="faq-body">
+            <p>No. During this pilot release, Earn &amp; Pay does not hold customer funds or process wage payouts inside the app. Employers pay workers directly according to the wage amount and frequency stated in the job listing.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">What does "Verified Employer" vs. "Unverified Listing" mean?</summary>
+          <div class="faq-body">
+            <p>"Verified Employer" means an administrator has reviewed the employer's business details through our documented check. "Unverified Listing" means the employer has registered an account and posted a vacancy, but has not yet completed manual verification. Always follow our <a href="{{ url_for('public.safety_guidelines') }}">Safety Guidelines</a>.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">How do I know if an employer has seen my application?</summary>
+          <div class="faq-body">
+            <p>Every application has a live status tracker in your Worker Dashboard showing when it moves from <em>Applied</em> to <em>Under Review</em>, <em>Shortlisted</em>, <em>Interview Scheduled</em>, <em>Accepted</em>, or <em>Rejected</em>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+{% endblock %}

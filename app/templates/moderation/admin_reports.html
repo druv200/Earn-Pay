@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
+
+{% block title %}Moderation Reports Queue — Earn &amp; Pay Admin{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="reports-queue-heading">
+  <div class="container">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-6);">
+      <div>
+        <a href="{{ url_for('moderation.admin_dashboard') }}" class="text-meta">&larr; Back to Admin Console</a>
+        <h1 id="reports-queue-heading" class="page-title" style="margin-top: var(--space-2);">
+          Safety &amp; Moderation Reports Queue
+        </h1>
+      </div>
+      <nav aria-label="Filter reports by status" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+        {% for st in ['all', 'open', 'investigating', 'resolved', 'dismissed'] %}
+        <a
+          href="{{ url_for('moderation.admin_reports', status=st) }}"
+          class="btn {{ 'btn--primary' if status_filter == st else 'btn--secondary' }} btn--sm"
+        >
+          {{ st | title }}
+        </a>
+        {% endfor %}
+      </nav>
+    </header>
+
+    {% if reports %}
+    <div style="display: grid; gap: var(--space-5);">
+      {% for rep in reports %}
+      {% set summary = target_summaries.get(rep.id, {}) %}
+      <article class="surface-card" style="padding: var(--space-5);" aria-label="Moderation report #{{ rep.id }}">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3);">
+          <div>
+            <span class="badge badge--warning">Reason: {{ rep.reason | replace('_', ' ') | title }}</span>
+            <span class="badge badge--neutral">Status: {{ rep.status | title }}</span>
+            {% if rep.moderation_action != 'none' %}
+            <span class="badge badge--navy">Enforcement: {{ rep.moderation_action | replace('_', ' ') | title }}</span>
+            {% endif %}
+            <h2 style="font-size: var(--text-lg); margin-top: var(--space-2);">
+              Report #{{ rep.id }} — {{ summary.label or (rep.target_type ~ ' #' ~ rep.target_id) }}
+            </h2>
+          </div>
+          <div class="text-meta" style="text-align: right;">
+            <div>Submitted {{ rep.created_at.strftime('%d %b %Y, %H:%M UTC') }}</div>
+            <div>Reporter: {{ rep.reporter.normalized_email if rep.reporter else 'Anonymous / Deleted' }}</div>
+            {% if summary.url %}
+            <a href="{{ summary.url }}" class="btn btn--secondary btn--sm" style="margin-top: var(--space-2);">Inspect Reported Target</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <p style="background: var(--color-bg-primary); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+          {{ rep.details }}
+        </p>
+
+        <form method="post" action="{{ url_for('moderation.resolve_report_action', report_id=rep.id) }}" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+          {{ resolution_form.hidden_tag() }}
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3);">
+            <div class="form-group">
+              <label class="form-label" for="status-{{ rep.id }}">Decision Status</label>
+              <select id="status-{{ rep.id }}" name="status" class="form-select">
+                <option value="investigating" {% if rep.status == 'investigating' %}selected{% endif %}>Mark as Investigating</option>
+                <option value="resolved" {% if rep.status in ('open', 'resolved') %}selected{% endif %}>Resolve Report</option>
+                <option value="dismissed" {% if rep.status == 'dismissed' %}selected{% endif %}>Dismiss Report (No Violation)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="action-{{ rep.id }}">Enforcement Action</label>
+              <select id="action-{{ rep.id }}" name="moderation_action" class="form-select">
+                <option value="none" {% if rep.moderation_action == 'none' %}selected{% endif %}>No Enforcement Action</option>
+                <option value="listing_hidden" {% if rep.moderation_action == 'listing_hidden' %}selected{% endif %}>Archive / Hide Reported Job Listing</option>
+                <option value="account_suspended" {% if rep.moderation_action == 'account_suspended' %}selected{% endif %}>Suspend Target Account</option>
+                <option value="warning_issued" {% if rep.moderation_action == 'warning_issued' %}selected{% endif %}>Issue Formal Safety Warning</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="notes-{{ rep.id }}">Resolution Notes</label>
+              <input
+                id="notes-{{ rep.id }}"
+                type="text"
+                name="resolution_notes"
+                class="form-input"
+                value="{{ rep.resolution_notes or '' }}"
+                placeholder="Document findings for audit trail..."
+              >
+            </div>
+          </div>
+          <button type="submit" class="btn btn--primary btn--sm" style="margin-top: var(--space-2);">
+            Save Moderation Decision
+          </button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    {{ empty_state(
+      title="No Moderation Reports in This View",
+      message="There are no reports matching the selected status filter.",
+      action_url=url_for('moderation.admin_reports', status='all'),
+      action_label="Show All Reports"
+    ) }}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

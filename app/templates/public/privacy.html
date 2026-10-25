@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="policy-layout">
+      <aside class="policy-toc" aria-label="Privacy Policy Sections">
+        <span class="eyebrow">Contents</span>
+        <ul class="footer-links" style="margin-top: var(--space-2);">
+          <li><a href="#data-collected" style="color: var(--color-text-primary);">1. Information We Collect</a></li>
+          <li><a href="#how-we-use" style="color: var(--color-text-primary);">2. How We Use Information</a></li>
+          <li><a href="#privacy-controls" style="color: var(--color-text-primary);">3. Worker Privacy Controls</a></li>
+          <li><a href="#security-retention" style="color: var(--color-text-primary);">4. Security &amp; Retention</a></li>
+          <li><a href="#account-deletion" style="color: var(--color-text-primary);">5. Account Deletion Rights</a></li>
+        </ul>
+      </aside>
+
+      <article class="policy-content" aria-labelledby="privacy-heading">
+        <span class="eyebrow">Data Minimization &amp; User Rights</span>
+        <h1 id="privacy-heading" class="page-heading">Privacy Policy</h1>
+        <p class="lead-copy">
+          Earn &amp; Pay follows strict data minimization principles. We collect only the information needed to operate the local employment marketplace safely.
+        </p>
+
+        <h2 id="data-collected" class="section-heading">1. Information We Collect</h2>
+        <p>
+          <strong>Account Data:</strong> Full name, normalized email address, role (Worker or Employer), and a salted password hash (we never store plaintext passwords).
+        </p>
+        <p>
+          <strong>Worker Profile Data:</strong> Skills, experience summary, preferred job categories, preferred neighborhood/pincode, availability, expected daily wage, and optional phone number. We do not collect payment-card details or unnecessary government identity documents during registration.
+        </p>
+        <p>
+          <strong>Employer Profile &amp; Job Data:</strong> Business name, business category, workplace address, pincode, contact phone, and published job terms.
+        </p>
+
+        <h2 id="how-we-use" class="section-heading">2. How We Use Information</h2>
+        <p>
+          We use your information to match workers with relevant local vacancies, process job applications, deliver status notifications, investigate abuse reports, and maintain security audit logs.
+        </p>
+
+        <h2 id="privacy-controls" class="section-heading">3. Worker Privacy Controls</h2>
+        <p>
+          Workers control whether their profile is visible to employers and whether their phone number is displayed (`show_phone_to_employers` is disabled by default). In-app notifications never expose private candidate contact details in notification previews.
+        </p>
+
+        <h2 id="security-retention" class="section-heading">4. Security &amp; Retention</h2>
+        <p>
+          All passwords are protected with cryptographic hashing, verification and reset tokens are stored as single-use SHA-256 hashes, and database access is restricted by server-side ownership checks.
+        </p>
+
+        <h2 id="account-deletion" class="section-heading">5. Account Deletion Rights</h2>
+        <p>
+          Users may request account deletion at any time from their account settings or via <a href="{{ url_for('public.help_contact') }}">Help &amp; Support</a>. Upon deletion, personal profile records and active applications are removed or anonymized in accordance with applicable Indian data-protection requirements.
+        </p>
+      </article>
+    </div>
+  </div>
+{% endblock %}

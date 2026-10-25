@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import job_ledger_row, safety_notice_banner, empty_state %}
+
+{% block title %}Discover Local Jobs — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="workspace-shell">
+      {# Left Filter Sidebar Rail #}
+      <aside class="workspace-sidebar" aria-label="Job Discovery Filters">
+        <span class="eyebrow">Filter Opportunities</span>
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-4);">
+          Refine Local Search
+        </h2>
+
+        <form method="get" action="{{ url_for('jobs.job_discovery') }}" role="search">
+          <div class="form-group">
+            <label for="filter-q" class="form-label">Keyword or Skill</label>
+            <input
+              type="search"
+              id="filter-q"
+              name="q"
+              value="{{ q }}"
+              class="form-input"
+              placeholder="e.g., helper, billing, cook"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="filter-location" class="form-label">Area or Pincode</label>
+            <input
+              type="text"
+              id="filter-location"
+              name="location"
+              value="{{ location }}"
+              class="form-input"
+              placeholder="e.g., Jayanagar, 560041"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="filter-category" class="form-label">Category</label>
+            <select id="filter-category" name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="filter-job-type" class="form-label">Job Type</label>
+            <select id="filter-job-type" name="job_type" class="form-select">
+              <option value="">All Job Types</option>
+              <option value="daily_wage" {% if job_type == 'daily_wage' %}selected{% endif %}>Daily Wage</option>
+              <option value="part_time" {% if job_type == 'part_time' %}selected{% endif %}>Part-Time</option>
+              <option value="temporary" {% if job_type == 'temporary' %}selected{% endif %}>Temporary</option>
+              <option value="full_time" {% if job_type == 'full_time' %}selected{% endif %}>Full-Time</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="filter-frequency" class="form-label">Payment Frequency</label>
+            <select id="filter-frequency" name="wage_frequency" class="form-select">
+              <option value="">Any Frequency</option>
+              <option value="hourly" {% if wage_frequency == 'hourly' %}selected{% endif %}>Hourly</option>
+              <option value="daily" {% if wage_frequency == 'daily' %}selected{% endif %}>Daily</option>
+              <option value="weekly" {% if wage_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+              <option value="monthly" {% if wage_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+              <option value="fixed_shift" {% if wage_frequency == 'fixed_shift' %}selected{% endif %}>Fixed Shift</option>
+            </select>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-2);">
+            <div class="form-group">
+              <label for="filter-min-wage" class="form-label">Min Wage (₹)</label>
+              <input
+                type="number"
+                id="filter-min-wage"
+                name="min_wage"
+                value="{{ min_wage }}"
+                class="form-input"
+                min="0"
+                placeholder="400"
+              >
+            </div>
+            <div class="form-group">
+              <label for="filter-max-wage" class="form-label">Max Wage (₹)</label>
+              <input
+                type="number"
+                id="filter-max-wage"
+                name="max_wage"
+                value="{{ max_wage }}"
+                class="form-input"
+                min="0"
+                placeholder="25000"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="filter-sort" class="form-label">Sort Results By</label>
+            <select id="filter-sort" name="sort" class="form-select">
+              <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest Published</option>
+              <option value="wage_high" {% if sort == 'wage_high' %}selected{% endif %}>Highest Wage Amount</option>
+              <option value="wage_low" {% if sort == 'wage_low' %}selected{% endif %}>Lowest Wage Amount</option>
+              <option value="deadline_soon" {% if sort == 'deadline_soon' %}selected{% endif %}>Closing Soonest</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: var(--space-2);">
+            Apply Filters
+          </button>
+          <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-secondary btn-sm" style="width: 100%; text-align: center;">
+            Reset All Filters
+          </a>
+        </form>
+      </aside>
+
+      {# Right Results Column #}
+      <div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-4);">
+          <div>
+            <span class="eyebrow">Local Employment Directory</span>
+            <h1 class="page-heading" style="margin-bottom: 0;">
+              Open Local Job Listings ({{ search_page.total_count }})
+            </h1>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary);">
+            Page {{ search_page.page }} of {{ search_page.total_pages }}
+          </span>
+        </div>
+
+        {% if search_page.jobs %}
+          <div class="job-ledger" role="feed" aria-label="Filtered job search results">
+            {% for job in search_page.jobs %}
+              {{ job_ledger_row(job, detail_url=url_for('jobs.job_detail', job_id=job.id)) }}
+            {% endfor %}
+          </div>
+
+          {# Accessible Pagination Bar #}
+          {% if search_page.total_pages > 1 %}
+            <nav aria-label="Job search pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 2px solid var(--color-border-strong);">
+              {% if search_page.page > 1 %}
+                <a
+                  href="{{ url_for('jobs.job_discovery', q=q, location=location, category=category, job_type=job_type, wage_frequency=wage_frequency, min_wage=min_wage, max_wage=max_wage, sort=sort, page=search_page.page - 1) }}"
+                  class="btn btn-secondary btn-sm"
+                >
+                  ← Previous Page
+                </a>
+              {% else %}
+                <span></span>
+              {% endif %}
+
+              <span style="font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;">
+                Page {{ search_page.page }} of {{ search_page.total_pages }}
+              </span>
+
+              {% if search_page.page < search_page.total_pages %}
+                <a
+                  href="{{ url_for('jobs.job_discovery', q=q, location=location, category=category, job_type=job_type, wage_frequency=wage_frequency, min_wage=min_wage, max_wage=max_wage, sort=sort, page=search_page.page + 1) }}"
+                  class="btn btn-secondary btn-sm"
+                >
+                  Next Page →
+                </a>
+              {% else %}
+                <span></span>
+              {% endif %}
+            </nav>
+          {% endif %}
+        {% else %}
+          {{ empty_state(
+            title="No local jobs available yet.",
+            message="New opportunities will appear here when employers publish their first listings. Please check again soon.",
+            action_url=url_for('jobs.job_discovery'),
+            action_label="Adjust Search Filters"
+          ) }}
+        {% endif %}
+
+        {{ safety_notice_banner() }}
+      </div>
+    </div>
+  </div>
+{% endblock %}

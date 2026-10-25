@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Worker Profile &amp; Privacy — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="edit-worker-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">Worker Profile &amp; Visibility Controls</span>
+        <h1 id="edit-worker-heading" class="page-heading">Update Your Worker Profile</h1>
+        <p class="lead-copy">
+          Keep your skills, preferred neighborhood, and availability up to date. You control what employers can see.
+        </p>
+
+        <form method="post" action="{{ url_for('profiles.edit_worker_profile') }}" novalidate data-prevent-double-submit>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            <label for="{{ form.full_name.id }}" class="form-label">{{ form.full_name.label.text }}</label>
+            {{ form.full_name(class="form-input", required=true) }}
+            {% for error in form.full_name.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.phone_number.id }}" class="form-label">{{ form.phone_number.label.text }}</label>
+            <span class="form-hint" id="phone-privacy-hint">
+              Your phone number is hidden from employers unless you explicitly enable phone visibility below.
+            </span>
+            {{ form.phone_number(class="form-input", placeholder="+91 98765 43210", **{"aria-describedby": "phone-privacy-hint"}) }}
+            {% for error in form.phone_number.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.skills.id }}" class="form-label">{{ form.skills.label.text }}</label>
+            <span class="form-hint">List practical skills separated by commas (e.g., Retail billing, stock counting, Kannada, two-wheeler delivery).</span>
+            {{ form.skills(class="form-textarea", rows=3) }}
+            {% for error in form.skills.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.experience_summary.id }}" class="form-label">{{ form.experience_summary.label.text }}</label>
+            {{ form.experience_summary(class="form-textarea", rows=4, placeholder="Describe past shops, restaurants, or roles you have worked in.") }}
+            {% for error in form.experience_summary.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.preferred_categories.id }}" class="form-label">{{ form.preferred_categories.label.text }}</label>
+              {{ form.preferred_categories(class="form-input", placeholder="e.g., Retail, Restaurant & Food") }}
+              {% for error in form.preferred_categories.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.availability.id }}" class="form-label">{{ form.availability.label.text }}</label>
+              {{ form.availability(class="form-select") }}
+              {% for error in form.availability.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.preferred_location.id }}" class="form-label">{{ form.preferred_location.label.text }}</label>
+              {{ form.preferred_location(class="form-input", placeholder="e.g., Jayanagar, Indiranagar") }}
+              {% for error in form.preferred_location.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.pincode.id }}" class="form-label">{{ form.pincode.label.text }}</label>
+              {{ form.pincode(class="form-input", placeholder="e.g., 560041") }}
+              {% for error in form.pincode.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.travel_radius_km.id }}" class="form-label">{{ form.travel_radius_km.label.text }}</label>
+              {{ form.travel_radius_km(class="form-input", type="number", min="0", max="200") }}
+              {% for error in form.travel_radius_km.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.expected_daily_wage.id }}" class="form-label">{{ form.expected_daily_wage.label.text }}</label>
+              {{ form.expected_daily_wage(class="form-input", placeholder="e.g., 650.00") }}
+              {% for error in form.expected_daily_wage.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <fieldset class="form-group" style="border: 2px solid var(--color-border-strong); padding: var(--space-4); background-color: var(--color-bg-sage-subtle); margin-top: var(--space-4);">
+            <legend class="form-label" style="padding-inline: 0.5rem;">Privacy &amp; Visibility Controls</legend>
+
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: var(--space-3);">
+              {{ form.is_profile_public(style="width: 1.2rem; height: 1.2rem; margin-top: 0.2rem;") }}
+              <label for="{{ form.is_profile_public.id }}" style="font-size: var(--text-sm);">
+                {{ form.is_profile_public.label.text }}
+              </label>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+              {{ form.show_phone_to_employers(style="width: 1.2rem; height: 1.2rem; margin-top: 0.2rem;") }}
+              <label for="{{ form.show_phone_to_employers.id }}" style="font-size: var(--text-sm);">
+                {{ form.show_phone_to_employers.label.text }}
+              </label>
+            </div>
+          </fieldset>
+
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5);">
+            <button type="submit" class="btn btn-primary" data-loading-text="Saving Profile...">
+              Save Worker Profile
+            </button>
+            <a href="{{ url_for('profiles.worker_dashboard') }}" class="btn btn-secondary">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

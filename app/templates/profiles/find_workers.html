@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
+
+{% block title %}Find Workers — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    {# Top Available Workers Count Banner #}
+    <section class="trust-charter" aria-labelledby="worker-availability-banner" style="margin-top: var(--space-5); margin-bottom: 0;">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-4);">
+        <div>
+          <span class="eyebrow">Real-Time Worker Availability</span>
+          <h2 id="worker-availability-banner" style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+            {% if available_worker_count > 0 %}
+              {{ available_worker_count }} {{ 'worker' if available_worker_count == 1 else 'workers' }} available in your area{% if location %} ({{ location }}){% endif %}
+            {% else %}
+              No workers are currently available. Check back as more people join Earn &amp; Pay.
+            {% endif %}
+          </h2>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0.25rem 0 0;">
+            Showing active, discoverable Worker profiles with completed skills and location preferences. Private phone numbers and email addresses are never exposed in the public directory.
+          </p>
+        </div>
+        <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <a href="{{ url_for('jobs.create_job') }}" class="btn btn-primary btn-sm">
+            + Post a Job
+          </a>
+          <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary btn-sm">
+            Employer Dashboard
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="workspace-shell">
+      {# Left Filter Sidebar Rail #}
+      <aside class="workspace-sidebar" aria-label="Worker Discovery Filters">
+        <span class="eyebrow">Filter Candidates</span>
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-4);">
+          Search Workers
+        </h2>
+
+        <form method="get" action="{{ url_for('profiles.find_workers') }}" role="search">
+          <div class="form-group">
+            <label for="worker-filter-q" class="form-label">Keyword or Skill</label>
+            <input
+              type="search"
+              id="worker-filter-q"
+              name="q"
+              value="{{ q }}"
+              class="form-input"
+              placeholder="e.g., billing, cooking, packing, Kannada"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="worker-filter-location" class="form-label">Location or Pincode</label>
+            <input
+              type="text"
+              id="worker-filter-location"
+              name="location"
+              value="{{ location }}"
+              class="form-input"
+              placeholder="e.g., Jayanagar, 560041"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="worker-filter-category" class="form-label">Work Category</label>
+            <select id="worker-filter-category" name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="worker-filter-availability" class="form-label">Availability</label>
+            <select id="worker-filter-availability" name="availability" class="form-select">
+              <option value="">Any Availability</option>
+              <option value="daily" {% if availability == 'daily' %}selected{% endif %}>Daily Shifts</option>
+              <option value="part_time" {% if availability == 'part_time' %}selected{% endif %}>Part-Time</option>
+              <option value="weekends" {% if availability == 'weekends' %}selected{% endif %}>Weekends</option>
+              <option value="flexible" {% if availability == 'flexible' %}selected{% endif %}>Flexible</option>
+              <option value="full_time" {% if availability == 'full_time' %}selected{% endif %}>Full-Time</option>
+            </select>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-2);">
+            <div class="form-group">
+              <label for="worker-filter-min-wage" class="form-label">Min Daily Wage (₹)</label>
+              <input
+                type="number"
+                id="worker-filter-min-wage"
+                name="min_wage"
+                value="{{ min_wage }}"
+                class="form-input"
+                min="0"
+                placeholder="400"
+              >
+            </div>
+            <div class="form-group">
+              <label for="worker-filter-max-wage" class="form-label">Max Daily Wage (₹)</label>
+              <input
+                type="number"
+                id="worker-filter-max-wage"
+                name="max_wage"
+                value="{{ max_wage }}"
+                class="form-input"
+                min="0"
+                placeholder="2500"
+              >
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: var(--space-2);" data-loading-text="Filtering Workers...">
+            Apply Filters
+          </button>
+          <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-secondary btn-sm" style="width: 100%; text-align: center;">
+            Reset Filters
+          </a>
+        </form>
+      </aside>
+
+      {# Right Results Column #}
+      <div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-4);">
+          <div>
+            <span class="eyebrow">Employer Worker Directory</span>
+            <h1 class="page-heading" style="margin-bottom: 0;">
+              Available Local Workers ({{ worker_page.total_count }})
+            </h1>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary);">
+            Page {{ worker_page.page }} of {{ worker_page.total_pages }}
+          </span>
+        </div>
+
+        {% if worker_page.workers %}
+          <div class="job-ledger" role="feed" aria-label="Discoverable worker profiles">
+            {% for worker in worker_page.workers %}
+              <article class="job-ledger-row" aria-label="Worker {{ worker.user.full_name }}">
+                <div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.35rem;">
+                    <span class="badge badge-verified">
+                      {{ worker.availability | replace('_', ' ') | title }}
+                    </span>
+                    <span class="badge badge-category">
+                      Profile {{ worker.completion_percentage }}% Complete
+                    </span>
+                    {% if worker.preferred_categories %}
+                      <span class="badge badge-unverified">{{ worker.preferred_categories }}</span>
+                    {% endif %}
+                  </div>
+                  <h3 class="job-row-title">
+                    <a href="{{ url_for('profiles.view_worker_profile', worker_id=worker.id) }}">
+                      {{ worker.user.full_name }}
+                    </a>
+                  </h3>
+                  <div class="job-row-meta">
+                    <span><strong>Skills:</strong> {{ worker.skills }}</span>
+                    <span>
+                      <strong>Preferred Area:</strong>
+                      {{ worker.preferred_location or 'Local Area' }}{% if worker.pincode %} ({{ worker.pincode }}){% endif %}
+                    </span>
+                  </div>
+                  {% if worker.experience_summary %}
+                    <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0.35rem 0 0;">
+                      <strong>Experience:</strong> {{ worker.experience_summary }}
+                    </p>
+                  {% endif %}
+                </div>
+
+                <div>
+                  {% if worker.expected_daily_wage is not none %}
+                    <span class="badge badge-wage">
+                      ₹{{ "{:,.0f}".format(worker.expected_daily_wage) }} / daily expected
+                    </span>
+                  {% else %}
+                    <span class="badge badge-unverified">Wage negotiable</span>
+                  {% endif %}
+                </div>
+
+                <div style="font-size: var(--text-sm);">
+                  <div><strong>Travel Radius:</strong> {{ worker.travel_radius_km }} km</div>
+                  <div style="color: var(--color-text-secondary); font-size: var(--text-xs);">
+                    Availability: {{ worker.availability | replace('_', ' ') | title }}
+                  </div>
+                </div>
+
+                <div>
+                  <a href="{{ url_for('profiles.view_worker_profile', worker_id=worker.id) }}" class="btn btn-secondary btn-sm">
+                    View Worker Profile
+                  </a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+
+          {# Accessible Pagination Bar #}
+          {% if worker_page.total_pages > 1 %}
+            <nav aria-label="Worker directory pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 2px solid var(--color-border-strong);">
+              {% if worker_page.page > 1 %}
+                <a
+                  href="{{ url_for('profiles.find_workers', q=q, location=location, category=category, availability=availability, min_wage=min_wage, max_wage=max_wage, page=worker_page.page - 1) }}"
+                  class="btn btn-secondary btn-sm"
+                >
+                  ← Previous Page
+                </a>
+              {% else %}
+                <span></span>
+              {% endif %}
+
+              <span style="font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;">
+                Page {{ worker_page.page }} of {{ worker_page.total_pages }}
+              </span>
+
+              {% if worker_page.page < worker_page.total_pages %}
+                <a
+                  href="{{ url_for('profiles.find_workers', q=q, location=location, category=category, availability=availability, min_wage=min_wage, max_wage=max_wage, page=worker_page.page + 1) }}"
+                  class="btn btn-secondary btn-sm"
+                >
+                  Next Page →
+                </a>
+              {% else %}
+                <span></span>
+              {% endif %}
+            </nav>
+          {% endif %}
+        {% else %}
+          {{ empty_state(
+            title="No Eligible Workers Found",
+            message="No workers are currently available for these filters. Try changing your search criteria or check again later.",
+            action_url=url_for('profiles.find_workers'),
+            action_label="Reset Search Criteria"
+          ) }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

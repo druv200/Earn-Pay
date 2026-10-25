@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import job_ledger_row, empty_state %}
+
+{% block title %}Saved Jobs — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="saved-jobs-heading">
+    <div class="container">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-5);">
+        <div>
+          <span class="eyebrow">Worker Bookmarks</span>
+          <h1 id="saved-jobs-heading" class="page-heading" style="margin-bottom: 0;">
+            Your Saved Jobs ({{ saved_items | length }})
+          </h1>
+        </div>
+        <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-secondary btn-sm">
+          Browse More Local Jobs
+        </a>
+      </div>
+
+      {% if saved_items %}
+        <div class="job-ledger">
+          {% for saved in saved_items %}
+            {{ job_ledger_row(saved.job, detail_url=url_for('jobs.job_detail', job_id=saved.job.id)) }}
+          {% endfor %}
+        </div>
+      {% else %}
+        {{ empty_state(
+          title="You Have Not Saved Any Jobs Yet",
+          message="Bookmark interesting local jobs while browsing so you can compare wages and shift hours before applying.",
+          action_url=url_for('jobs.job_discovery'),
+          action_label="Explore Local Jobs"
+        ) }}
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

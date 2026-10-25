@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import format_wage, empty_state %}
+
+{% block title %}Manage Applicants: {{ job.title }} — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="applicants-heading">
+    <div class="container">
+      {# Top Summary Bar #}
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-6); padding-bottom: var(--space-4); border-bottom: 2px solid var(--color-border-strong);">
+        <div>
+          <span class="eyebrow">Candidate Evaluation &amp; Hiring Ledger</span>
+          <h1 id="applicants-heading" class="page-heading" style="margin-bottom: 0.25rem;">
+            Applicants for: {{ job.title }}
+          </h1>
+          <p style="margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary);">
+            <strong>Listing Status:</strong> {{ job.status | upper }} •
+            <strong>Wage:</strong> {{ format_wage(job) }} •
+            <strong>Vacancies Filled:</strong> {{ accepted_count }} / {{ job.vacancies }}
+          </p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+          <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="btn btn-secondary btn-sm">
+            View Job Page
+          </a>
+          <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary btn-sm">
+            Back to Employer Workspace
+          </a>
+        </div>
+      </div>
+
+      {% if enriched_applicants %}
+        {% for item in enriched_applicants %}
+          {% set app_rec = item.application %}
+          {% set worker = item.worker %}
+          {% set candidate_user = item.user %}
+          {% set match = item.match %}
+
+          <article class="policy-content" style="margin-bottom: var(--space-5);" aria-label="Candidate {{ candidate_user.full_name }}">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-3); border-bottom: 1px solid var(--color-border-subtle); padding-bottom: var(--space-3); margin-bottom: var(--space-4);">
+              <div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.35rem;">
+                  <span class="badge badge-category">STATUS: {{ app_rec.status | replace('_', ' ') | upper }}</span>
+                  {% for reason in match.reasons %}
+                    <span class="badge badge-verified">{{ reason }}</span>
+                  {% endfor %}
+                </div>
+                <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+                  <a href="{{ url_for('profiles.view_worker_profile', worker_id=worker.id) }}" style="color: var(--color-text-primary);">
+                    {{ candidate_user.full_name }}
+                  </a>
+                </h2>
+                <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">
+                  Applied on {{ app_rec.applied_at.strftime('%d %b %Y, %I:%M %p UTC') }} •
+                  Preferred Area: {{ worker.preferred_location or 'Not listed' }} ({{ worker.pincode or 'N/A' }}) •
+                  Availability: {{ worker.availability | replace('_', ' ') | title }}
+                </div>
+              </div>
+
+              <a href="{{ url_for('profiles.view_worker_profile', worker_id=worker.id) }}" class="btn btn-secondary btn-sm">
+                Full Candidate Profile
+              </a>
+            </div>
+
+            <div class="dual-manifesto" style="gap: var(--space-5);">
+              {# Left: Candidate Summary & Cover Note #}
+              <div>
+                <p style="margin-top: 0;"><strong>Skills:</strong> {{ worker.skills or 'Not listed' }}</p>
+                <p><strong>Experience:</strong> {{ worker.experience_summary or 'Not listed' }}</p>
+                <p>
+                  <strong>Contact Phone:</strong>
+                  {% if worker.show_phone_to_employers and worker.phone_number %}
+                    {{ worker.phone_number }}
+                  {% else %}
+                    <span class="badge badge-unverified">Phone hidden by worker privacy setting</span>
+                  {% endif %}
+                </p>
+
+                {% if app_rec.cover_note %}
+                  <div style="background-color: var(--color-bg-canvas); border-left: 4px solid var(--color-bg-navy); padding: var(--space-3); margin-top: var(--space-3);">
+                    <strong style="font-size: var(--text-xs); text-transform: uppercase;">Candidate Note:</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: var(--text-sm);">{{ app_rec.cover_note }}</p>
+                  </div>
+                {% endif %}
+
+                {% if app_rec.employer_private_notes %}
+                  <div style="background-color: var(--color-bg-sage-subtle); border: 1px solid var(--color-border-strong); padding: var(--space-3); margin-top: var(--space-3);">
+                    <strong style="font-size: var(--text-xs); text-transform: uppercase;">Your Private Hiring Notes:</strong>
+                    <p style="margin: 0.25rem 0 0; font-size: var(--text-sm);">{{ app_rec.employer_private_notes }}</p>
+                  </div>
+                {% endif %}
+              </div>
+
+              {# Right: Authorized Employer Status & Interview Action Form #}
+              <div style="background-color: var(--color-bg-canvas); border: 2px solid var(--color-border-strong); padding: var(--space-4);">
+                <h3 style="font-family: var(--font-display); font-size: var(--text-body-lg); margin-top: 0;">
+                  Record Hiring Decision / Schedule Interview
+                </h3>
+
+                {% if app_rec.status in ['accepted', 'rejected', 'withdrawn'] %}
+                  <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+                    This application has reached a final status (<strong>{{ app_rec.status | upper }}</strong>) and its history is preserved.
+                  </p>
+                {% else %}
+                  <form method="post" action="{{ url_for('applications.update_applicant_status', application_id=app_rec.id) }}" data-prevent-double-submit>
+                    {{ update_form.hidden_tag() }}
+
+                    <div class="form-group">
+                      <label for="status-{{ app_rec.id }}" class="form-label">New Status</label>
+                      <select id="status-{{ app_rec.id }}" name="target_status" class="form-select">
+                        <option value="under_review" {% if app_rec.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                        <option value="shortlisted" {% if app_rec.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                        <option value="interview_scheduled" {% if app_rec.status == 'interview_scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                        <option value="accepted">Accepted (Confirm Hire)</option>
+                        <option value="rejected">Rejected (Not Selected)</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="interview-date-{{ app_rec.id }}" class="form-label">Interview Date/Time (YYYY-MM-DD HH:MM)</label>
+                      <input
+                        type="text"
+                        id="interview-date-{{ app_rec.id }}"
+                        name="interview_date"
+                        value="{{ app_rec.interview_scheduled_at.strftime('%Y-%m-%d %H:%M') if app_rec.interview_scheduled_at else '' }}"
+                        class="form-input"
+                        placeholder="e.g., 2026-11-01 10:30"
+                      >
+                    </div>
+
+                    <div class="form-group">
+                      <label for="interview-details-{{ app_rec.id }}" class="form-label">Interview Instructions (Sent to Worker)</label>
+                      <input
+                        type="text"
+                        id="interview-details-{{ app_rec.id }}"
+                        name="interview_details"
+                        value="{{ app_rec.interview_details or '' }}"
+                        class="form-input"
+                        placeholder="e.g., Meet store manager at counter between 10 AM and 11 AM"
+                      >
+                    </div>
+
+                    <div class="form-group">
+                      <label for="private-notes-{{ app_rec.id }}" class="form-label">Private Internal Notes (Only Visible to You)</label>
+                      <textarea
+                        id="private-notes-{{ app_rec.id }}"
+                        name="employer_private_notes"
+                        class="form-textarea"
+                        rows="2"
+                        placeholder="Record internal screening notes..."
+                      >{{ app_rec.employer_private_notes or '' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;" data-loading-text="Updating Status...">
+                      Confirm &amp; Save Candidate Update
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        {{ empty_state(
+          title="No Applications Received for This Listing Yet",
+          message="Once local workers apply for this role, their candidate profiles, skill match indicators, and status controls will appear here.",
+          action_url=url_for('jobs.job_detail', job_id=job.id),
+          action_label="View Published Job Page"
+        ) }}
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Too Many Requests (429) — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="error-429-heading">
+  <div class="container" style="max-width: 600px; text-align: center;">
+    <div class="surface-card" style="padding: var(--space-8);">
+      <span class="badge badge--warning">HTTP 429 · Rate Limit Reached</span>
+      <h1 id="error-429-heading" class="page-title" style="margin-top: var(--space-3);">
+        Please Wait a Moment Before Trying Again
+      </h1>
+      <p style="color: var(--color-text-secondary); margin: var(--space-4) 0 var(--space-6);">
+        To protect accounts and keep the marketplace responsive for everyone, we limit how quickly
+        repeated requests can be submitted. Please pause for a minute and try again.
+      </p>
+      <div style="display: flex; justify-content: center; gap: var(--space-3); flex-wrap: wrap;">
+        <a href="{{ url_for('public.index') }}" class="btn btn--primary">Return to Home</a>
+        <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn--secondary">Browse Open Jobs</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

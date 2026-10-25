@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import verification_badge, empty_state %}
+
+{% block title %}Employer Verification Queue — Earn &amp; Pay Admin{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="emp-verify-heading">
+  <div class="container">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-6);">
+      <div>
+        <a href="{{ url_for('moderation.admin_dashboard') }}" class="text-meta">&larr; Back to Admin Console</a>
+        <h1 id="emp-verify-heading" class="page-title" style="margin-top: var(--space-2);">
+          Employer Business Verification Queue
+        </h1>
+        <p style="color: var(--color-text-secondary); margin-top: var(--space-1);">
+          Integrity Rule: Only employers with both <code>verification_status == 'verified'</code> and a recorded
+          <code>verified_at</code> timestamp display the Verified Employer badge.
+        </p>
+      </div>
+      <nav aria-label="Filter employers by verification status" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+        {% for st in ['all', 'pending', 'verified', 'unverified'] %}
+        <a
+          href="{{ url_for('moderation.admin_employers', status=st) }}"
+          class="btn {{ 'btn--primary' if status_filter == st else 'btn--secondary' }} btn--sm"
+        >
+          {{ st | title }}
+        </a>
+        {% endfor %}
+      </nav>
+    </header>
+
+    {% if employers %}
+    <div style="display: grid; gap: var(--space-5);">
+      {% for emp in employers %}
+      <article class="surface-card" style="padding: var(--space-5);" aria-label="Employer {{ emp.business_name }}">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3);">
+          <div>
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <h2 style="font-size: var(--text-lg); margin: 0;">{{ emp.business_name }}</h2>
+              {{ verification_badge(emp) }}
+            </div>
+            <p class="text-meta" style="margin-top: var(--space-1);">
+              Type: {{ emp.business_type | title }} · Owner: {{ emp.user.full_name }} ({{ emp.user.normalized_email }})
+              · Phone: {{ emp.contact_phone or 'Not provided' }}
+            </p>
+            <p class="text-meta">
+              Address: {{ emp.address or 'Not listed' }} · {{ emp.location or 'Bengaluru' }} ({{ emp.pincode or 'No pincode' }})
+            </p>
+          </div>
+          <div style="text-align: right;">
+            <a href="{{ url_for('profiles.public_employer_profile', employer_id=emp.id) }}" class="btn btn--secondary btn--sm">
+              Public Profile ({{ emp.jobs | length }} jobs)
+            </a>
+          </div>
+        </div>
+
+        {% if emp.description %}
+        <p style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary);">
+          {{ emp.description }}
+        </p>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('moderation.verify_employer_action', employer_id=emp.id) }}" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+          {{ verify_form.hidden_tag() }}
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3); align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="decision-{{ emp.id }}">Verification Decision</label>
+              <select id="decision-{{ emp.id }}" name="decision" class="form-select">
+                <option value="verified" {% if emp.verification_status == 'verified' %}selected{% endif %}>Approve &amp; Grant Verified Employer Badge</option>
+                <option value="pending" {% if emp.verification_status == 'pending' %}selected{% endif %}>Keep in Pending Review</option>
+                <option value="unverified" {% if emp.verification_status == 'unverified' %}selected{% endif %}>Revoke / Mark Unverified</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="vnotes-{{ emp.id }}">Verification Audit Notes</label>
+              <input
+                id="vnotes-{{ emp.id }}"
+                type="text"
+                name="verification_notes"
+                class="form-input"
+                value="{{ emp.verification_notes or '' }}"
+                placeholder="Shop licence / address check notes..."
+              >
+            </div>
+            <div>
+              <button type="submit" class="btn btn--primary btn--sm">Update Verification</button>
+            </div>
+          </div>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    {{ empty_state(
+      title="No Employers Match This Filter",
+      message="Switch filters to inspect other employer business profiles.",
+      action_url=url_for('moderation.admin_employers', status='all'),
+      action_label="Show All Employers"
+    ) }}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,98 @@
+/* ==========================================================================
+   EARN & PAY — Design System Tokens (Phase 1 Baseline)
+   Direction: Editorial Local-Work Marketplace
+   ========================================================================== */
+
+:root {
+  /* Core Brand Palette */
+  --color-bg-canvas: #F7F4EC;        /* Warm Ivory - primary background */
+  --color-bg-surface: #FFFFFF;       /* Pure White - cards, forms, ledger sheets */
+  --color-bg-sage: #DCE7D8;          /* Soft Sage - supportive panels & callouts */
+  --color-bg-sage-subtle: #EBF1E8;   /* Lighter Sage for hover/zebra states */
+  --color-bg-navy: #17253D;          /* Deep Navy - masthead, footer, primary ink */
+
+  /* Typography Colors (WCAG AA/AAA verified against #F7F4EC and #FFFFFF) */
+  --color-text-primary: #17253D;     /* Deep Navy - 14.2:1 contrast on Ivory */
+  --color-text-secondary: #545B67;   /* Accessible Slate Gray - 6.1:1 on Ivory */
+  --color-text-muted: #707783;       /* Muted Gray - borders, large subheadings */
+  --color-text-on-navy: #F7F4EC;     /* Ivory text on Deep Navy surfaces */
+
+  /* Action & Highlight Tokens */
+  --color-accent-orange: #F07845;    /* Vibrant Orange - primary CTA & highlights */
+  --color-accent-orange-hover: #DC622F;
+  --color-accent-orange-soft: #FDECE4;
+
+  /* Semantic Status Tokens (Always pair with icon + explicit text label) */
+  --color-status-success-bg: #E3F3EA;
+  --color-status-success-text: #165936;
+  --color-status-success-border: #8AC9A6;
+
+  --color-status-warning-bg: #FEF3DE;
+  --color-status-warning-text: #854D0E;
+  --color-status-warning-border: #F3C677;
+
+  --color-status-danger-bg: #FDE8E8;
+  --color-status-danger-text: #9B1C1C;
+  --color-status-danger-border: #F5A3A3;
+
+  --color-status-info-bg: #E6EEF8;
+  --color-status-info-text: #1E4273;
+  --color-status-info-border: #9BBCE5;
+
+  /* Borders & Dividers */
+  --color-border-strong: #17253D;
+  --color-border-subtle: #D5D0C5;
+  --color-border-input: #8C939E;
+
+  /* Typography Families */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Typographic Scale */
+  --text-display: clamp(2.25rem, 4vw + 1rem, 3.5rem);
+  --text-h1: clamp(1.75rem, 2.5vw + 1rem, 2.5rem);
+  --text-h2: clamp(1.375rem, 1.5vw + 0.8rem, 1.875rem);
+  --text-h3: 1.25rem;
+  --text-body-lg: 1.125rem;
+  --text-body: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+
+  /* Spacing Scale (8px baseline grid with 4px half-steps) */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+  --space-8: 3rem;     /* 48px */
+  --space-10: 4rem;    /* 64px */
+  --space-12: 6rem;    /* 96px */
+
+  /* Layout & Surfaces */
+  --container-max-width: 1240px;
+  --container-narrow: 780px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --shadow-subtle: 0 2px 6px rgba(23, 37, 61, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(23, 37, 61, 0.12);
+  --shadow-editorial: 4px 4px 0px #17253D;
+
+  /* Accessibility & Interaction */
+  --touch-target-min: 44px;
+  --focus-ring: 3px solid #F07845;
+  --focus-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

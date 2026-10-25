@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import render_field %}
+
+{% block title %}Report a Suspicious Listing or Account — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="report-heading">
+  <div class="container" style="max-width: 720px;">
+    <header style="margin-bottom: var(--space-6);">
+      <span class="badge badge--warning">Trust &amp; Safety Moderation</span>
+      <h1 id="report-heading" class="page-title" style="margin-top: var(--space-2);">
+        Report a Suspicious Job or Account
+      </h1>
+      <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">
+        Earn &amp; Pay strictly prohibits registration fees, security deposits, misleading wage terms,
+        and unsafe workplace practices. Reports are reviewed confidentially by our Trust &amp; Safety team.
+      </p>
+    </header>
+
+    {% if target_summary %}
+    <div class="callout callout--sage" style="margin-bottom: var(--space-5);">
+      <strong>Reporting Target:</strong> {{ target_summary.label }}
+      {% if target_summary.url %}
+      — <a href="{{ target_summary.url }}">Inspect page</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="surface-card" style="padding: var(--space-6);">
+      <form method="post" action="{{ url_for('moderation.submit_report') }}" novalidate data-Safe-submit>
+        {{ form.hidden_tag() }}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4);">
+          {{ render_field(form.target_type) }}
+          {{ render_field(form.target_id, placeholder="e.g. 12") }}
+        </div>
+
+        {{ render_field(form.reason) }}
+        {{ render_field(
+          form.details,
+          rows="5",
+          placeholder="Describe what happened (e.g., someone asked for ₹500 registration fee on phone, or the wage offered differs from the listing)..."
+        ) }}
+
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5);">
+          <button type="submit" class="btn btn--primary" data-loading-text="Submitting Report...">
+            Submit Confidential Report
+          </button>
+          <a href="{{ url_for('public.safety_guidelines') }}" class="btn btn--secondary">
+            Read Safety Guidelines
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

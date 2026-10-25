@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="login-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">Member Access</span>
+        <h1 id="login-heading" class="page-heading">Sign In to Earn &amp; Pay</h1>
+        <p class="lead-copy">
+          Access your Worker application tracker or your Employer hiring workspace.
+        </p>
+
+        <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate data-prevent-double-submit>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            <label for="{{ form.email.id }}" class="form-label">{{ form.email.label.text }}</label>
+            {{ form.email(class="form-input", type="email", autocomplete="email", placeholder="you@example.com", required=true) }}
+            {% for error in form.email.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <label for="{{ form.password.id }}" class="form-label">{{ form.password.label.text }}</label>
+              <a href="{{ url_for('auth.forgot_password') }}" style="font-size: var(--text-xs); font-weight: 600; color: var(--color-text-primary);">
+                Forgot password?
+              </a>
+            </div>
+            {{ form.password(class="form-input", autocomplete="current-password", required=true) }}
+            {% for error in form.password.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              {{ form.remember_me(style="width: 1.15rem; height: 1.15rem; accent-color: var(--color-bg-navy);") }}
+              <label for="{{ form.remember_me.id }}" style="font-size: var(--text-sm);">
+                {{ form.remember_me.label.text }}
+              </label>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%; margin-top: var(--space-2);"
+            data-loading-text="Signing In..."
+          >
+            Sign In
+          </button>
+        </form>
+
+        <p style="margin-top: var(--space-5); font-size: var(--text-sm); color: var(--color-text-secondary); text-align: center;">
+          New to Earn &amp; Pay? <a href="{{ url_for('auth.register', next=request.args.get('next')) }}" style="font-weight: 700; color: var(--color-text-primary);">Create a Worker or Employer Account</a>
+        </p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

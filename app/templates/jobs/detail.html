@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import verification_badge, format_wage, safety_notice_banner %}
+
+{% block title %}{{ job.title }} at {{ job.employer.business_name }} — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="job-detail-heading">
+    <div class="container">
+      {# Draft or Owner Management Bar #}
+      {% if is_owner %}
+        <div class="trust-charter" style="margin-bottom: var(--space-6); background-color: var(--color-accent-orange-soft);">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-4);">
+            <div>
+              <span class="eyebrow">Employer Listing Controls • Status: {{ job.status | upper }}</span>
+              <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+                {% if job.status == 'draft' %}
+                  Draft Preview — Only visible to you until published
+                {% else %}
+                  You own this job listing
+                {% endif %}
+              </h2>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+              <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-secondary btn-sm">
+                Edit Job Details
+              </a>
+              <a href="{{ url_for('applications.manage_job_applicants', job_id=job.id) }}" class="btn btn-navy btn-sm">
+                Manage Applicants ({{ job.applications | length }})
+              </a>
+              {% if job.status == 'draft' %}
+                <form method="post" action="{{ url_for('jobs.update_job_status_route', job_id=job.id) }}" style="margin: 0;">
+                  {{ status_form.hidden_tag() }}
+                  <input type="hidden" name="target_status" value="published">
+                  <button type="submit" class="btn btn-primary btn-sm">Publish Listing Now</button>
+                </form>
+              {% elif job.status == 'published' %}
+                <form method="post" action="{{ url_for('jobs.update_job_status_route', job_id=job.id) }}" style="margin: 0;">
+                  {{ status_form.hidden_tag() }}
+                  <input type="hidden" name="target_status" value="closed">
+                  <button type="submit" class="btn btn-secondary btn-sm">Close Vacancy</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="workspace-shell">
+        {# Left Sidebar: Employer Card & Application Eligibility Action Box #}
+        <aside class="workspace-sidebar" aria-label="Employer Summary and Application Actions">
+          <span class="eyebrow">Hiring Business</span>
+          <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-2);">
+            <a href="{{ url_for('profiles.public_employer_profile', employer_id=job.employer.id) }}" style="color: var(--color-text-primary);">
+              {{ job.employer.business_name }}
+            </a>
+          </h2>
+          <div style="margin-bottom: var(--space-3);">
+            {{ verification_badge(job.employer) }}
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+            <strong>Business Type:</strong> {{ job.employer.business_type | title }}<br>
+            <strong>Area:</strong> {{ job.location }} ({{ job.pincode }})
+          </p>
+
+          <hr style="border: none; border-top: 1px solid var(--color-border-subtle); margin-block: var(--space-4);">
+
+          {# Application Action & Eligibility Status #}
+          <h3 style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-2);">
+            Application Status
+          </h3>
+
+          {% if not job.is_accepting_applications() %}
+            <div class="flash-banner flash-warning" style="margin-bottom: var(--space-3);">
+              <span>This listing is currently {{ job.status }} or past its deadline and is not accepting new applications.</span>
+            </div>
+          {% elif current_user.is_authenticated and current_user.is_worker %}
+            {% if existing_application %}
+              <div class="flash-banner flash-success" style="margin-bottom: var(--space-3);">
+                <span>You applied on {{ existing_application.applied_at.strftime('%d %b %Y') }} • Current Status: <strong>{{ existing_application.status | replace('_', ' ') | upper }}</strong></span>
+              </div>
+              {% if existing_application.can_transition_to('withdrawn') %}
+                <form method="post" action="{{ url_for('applications.withdraw_application', application_id=existing_application.id) }}" data-prevent-double-submit>
+                  {{ withdraw_form.hidden_tag() }}
+                  <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; margin-bottom: var(--space-3);">
+                    Withdraw My Application
+                  </button>
+                </form>
+              {% endif %}
+            {% else %}
+              <form method="post" action="{{ url_for('applications.apply_to_job', job_id=job.id) }}" data-prevent-double-submit>
+                {{ apply_form.hidden_tag() }}
+                <div class="form-group">
+                  <label for="{{ apply_form.cover_note.id }}" class="form-label">
+                    {{ apply_form.cover_note.label.text }}
+                  </label>
+                  {{ apply_form.cover_note(class="form-textarea", rows=3, placeholder="Briefly share your relevant experience or availability.") }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: var(--space-3);" data-loading-text="Submitting Application...">
+                  Apply for This Job
+                </button>
+              </form>
+            {% endif %}
+
+            {# Bookmark / Save Job Toggle #}
+            <form method="post" action="{{ url_for('applications.toggle_save_job_route', job_id=job.id) }}">
+              {{ save_form.hidden_tag() }}
+              <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+                {% if is_saved %}★ Remove from Saved Jobs{% else %}☆ Save Job for Later{% endif %}
+              </button>
+            </form>
+          {% elif not current_user.is_authenticated %}
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+              Sign in with a Worker account to apply in one click and track your application status.
+            </p>
+            <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: var(--space-2);">
+              Sign In to Apply
+            </a>
+            <a href="{{ url_for('auth.register', role='worker') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Register as a Worker
+            </a>
+          {% elif is_owner %}
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3);">
+              You are viewing your own job listing. Manage applicants or update listing status using the controls below.
+            </p>
+            <a href="{{ url_for('applications.manage_job_applicants', job_id=job.id) }}" class="btn btn-navy btn-sm" style="width: 100%; margin-bottom: var(--space-2);">
+              Manage Applicants ({{ job.applications | length }})
+            </a>
+            <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Find Workers
+            </a>
+          {% else %}
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+              Viewing listing as {{ current_user.role | title }}.
+            </p>
+          {% endif %}
+        </aside>
+
+        {# Main Column: Structured Job Fact-Sheet #}
+        <article class="policy-content">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: var(--space-3);">
+            <span class="badge badge-category">{{ job.category }}</span>
+            <span class="badge badge-unverified">{{ job.job_type | replace('_', ' ') | title }}</span>
+            <span class="badge badge-wage">{{ format_wage(job) }}</span>
+          </div>
+
+          <h1 id="job-detail-heading" class="page-heading">{{ job.title }}</h1>
+
+          {# Key-Value Compensation & Schedule Fact Grid #}
+          <div class="ops-metric-strip" style="margin-block: var(--space-5);">
+            <div class="ops-metric-box">
+              <span class="eyebrow">Wage &amp; Terms</span>
+              <div style="font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700;">
+                {{ format_wage(job) }}
+              </div>
+            </div>
+            <div class="ops-metric-box">
+              <span class="eyebrow">Working Hours</span>
+              <div style="font-weight: 700; font-size: var(--text-sm);">
+                {{ job.working_hours }}
+              </div>
+            </div>
+            <div class="ops-metric-box">
+              <span class="eyebrow">Openings</span>
+              <div style="font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700;">
+                {{ job.vacancies }}
+              </div>
+            </div>
+            <div class="ops-metric-box">
+              <span class="eyebrow">Apply Before</span>
+              <div style="font-weight: 700; font-size: var(--text-sm);">
+                {{ job.application_deadline.strftime('%d %b %Y') }}
+              </div>
+            </div>
+          </div>
+
+          <h2 class="section-heading">Role Description</h2>
+          <p style="white-space: pre-line;">{{ job.description }}</p>
+
+          <h2 class="section-heading" style="margin-top: var(--space-6);">Daily Responsibilities</h2>
+          <p style="white-space: pre-line;">{{ job.responsibilities }}</p>
+
+          <div class="dual-manifesto" style="margin-top: var(--space-6); gap: var(--space-4);">
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Required Skills</h3>
+              <p>{{ job.required_skills or 'No specialized skills required; training provided on shift.' }}</p>
+            </div>
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: var(--text-h3);">Experience Needed</h3>
+              <p>{{ job.experience_required or 'Open to freshers and experienced workers.' }}</p>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); font-size: var(--text-xs); color: var(--color-text-secondary); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3);">
+            <div>
+              <strong>Workplace Location:</strong> {{ job.location }} (Pincode: {{ job.pincode }}) •
+              <strong>Listing Reference:</strong> #JOB-{{ job.id }} •
+              <strong>Posted:</strong> {{ (job.published_at or job.created_at).strftime('%d %b %Y') }}
+            </div>
+            <div>
+              <a href="{{ url_for('moderation.submit_report', target_type='job', target_id=job.id) }}" class="btn btn-secondary btn-sm">
+                Report Suspicious Listing
+              </a>
+            </div>
+          </div>
+
+          {{ safety_notice_banner() }}
+        </article>
+      </div>
+    </div>
+  </section>
+{% endblock %}

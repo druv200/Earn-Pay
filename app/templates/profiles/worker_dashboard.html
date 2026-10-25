@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import format_wage, verification_badge, empty_state %}
+
+{% block title %}Worker Workspace — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="workspace-shell">
+      {# Left Sidebar Rail: Worker Summary, Profile Completion Meter & Quick Links #}
+      <aside class="workspace-sidebar" aria-label="Worker Profile Summary and Navigation">
+        <span class="eyebrow">Worker Workspace</span>
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-1);">
+          Welcome, {{ current_user.full_name }}
+        </h2>
+        <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0;">
+          {{ current_user.normalized_email }}
+        </p>
+
+        <div style="margin-block: var(--space-4); padding-block: var(--space-3); border-block: 1px solid var(--color-border-subtle);">
+          <div style="display: flex; justify-content: space-between; font-size: var(--text-sm); font-weight: 700;">
+            <span>Profile Completion</span>
+            <span>{{ profile.completion_percentage }}%</span>
+          </div>
+          <div
+            class="progress-meter-track"
+            role="progressbar"
+            aria-valuenow="{{ profile.completion_percentage }}"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="Worker profile completion percentage"
+          >
+            <div class="progress-meter-fill" style="width: {{ profile.completion_percentage }}%;"></div>
+          </div>
+          <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0;">
+            {% if profile.completion_percentage < 100 %}
+              Add skills, pincode, and expected daily wage to improve job recommendations.
+            {% else %}
+              ✓ Your worker profile is 100% complete.
+            {% endif %}
+          </p>
+        </div>
+
+        <div style="font-size: var(--text-sm); margin-bottom: var(--space-4);">
+          <div><strong>Preferred Area:</strong> {{ profile.preferred_location or 'Not set' }} ({{ profile.pincode or 'No pincode' }})</div>
+          <div><strong>Availability:</strong> {{ profile.availability | replace('_', ' ') | title }}</div>
+          <div><strong>Phone Privacy:</strong> {% if profile.show_phone_to_employers %}Visible to employers{% else %}Hidden (Private){% endif %}</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+          <a href="{{ url_for('profiles.edit_worker_profile') }}" class="btn btn-primary btn-sm">
+            Edit Worker Profile &amp; Privacy
+          </a>
+          <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-secondary btn-sm">
+            Search Local Jobs
+          </a>
+          <a href="{{ url_for('applications.saved_jobs_page') }}" class="btn btn-secondary btn-sm">
+            Saved Jobs ({{ saved_jobs | length }})
+          </a>
+          <a href="{{ url_for('profiles.account_settings') }}" class="btn btn-secondary btn-sm">
+            Account &amp; Notification Settings
+          </a>
+        </div>
+      </aside>
+
+      {# Main Workspace Column #}
+      <div>
+        {# 1. Upcoming Interview Alert Box (When Scheduled) #}
+        {% if upcoming_interviews %}
+          <section class="trust-charter" aria-labelledby="interviews-heading" style="margin-bottom: var(--space-6);">
+            <span class="eyebrow">Scheduled Interviews</span>
+            <h2 id="interviews-heading" style="font-family: var(--font-display); font-size: var(--text-h3); margin-bottom: var(--space-3);">
+              Upcoming Interview Details
+            </h2>
+            {% for interview_app in upcoming_interviews %}
+              <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border-strong); padding: var(--space-4); margin-bottom: var(--space-2);">
+                <strong>{{ interview_app.job.title }}</strong> at {{ interview_app.job.employer.business_name }}
+                <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: 0.25rem;">
+                  {% if interview_app.interview_scheduled_at %}
+                    <strong>Time:</strong> {{ interview_app.interview_scheduled_at.strftime('%d %b %Y, %I:%M %p UTC') }} •
+                  {% endif %}
+                  <strong>Instructions:</strong> {{ interview_app.interview_details or 'Check with employer on arrival at business premises.' }}
+                </div>
+              </div>
+            {% endfor %}
+          </section>
+        {% endif %}
+
+        {# 2. Application Status Timeline & Recent Applications #}
+        <section aria-labelledby="applications-heading" style="margin-bottom: var(--space-8);">
+          <div class="section-header" style="margin-bottom: var(--space-4);">
+            <span class="eyebrow">Application Tracker</span>
+            <h1 id="applications-heading" class="section-heading" style="margin-bottom: 0;">
+              Your Job Applications &amp; Status Timeline
+            </h1>
+          </div>
+
+          {% if applications %}
+            {% for app_rec in applications %}
+              <article class="timeline-card" aria-label="Application for {{ app_rec.job.title }}">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-3);">
+                  <div>
+                    <h3 style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0 0 0.25rem;">
+                      {{ app_rec.job.title }}
+                    </h3>
+                    <div style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+                      <strong>Employer:</strong>
+                      <a href="{{ url_for('profiles.public_employer_profile', employer_id=app_rec.job.employer.id) }}" style="color: var(--color-text-primary);">
+                        {{ app_rec.job.employer.business_name }}
+                      </a>
+                      • {{ app_rec.job.location }} ({{ app_rec.job.pincode }})
+                      • {{ format_wage(app_rec.job) }}
+                    </div>
+                  </div>
+                  <span class="badge badge-category">
+                    STATUS: {{ app_rec.status | replace('_', ' ') | upper }}
+                  </span>
+                </div>
+
+                {# Visual Status Timeline Steps #}
+                <div class="timeline-steps" aria-label="Application progress stages">
+                  {% for stage in ['applied', 'under_review', 'shortlisted', 'interview_scheduled', 'accepted'] %}
+                    <span class="timeline-step {% if app_rec.status == stage %}is-active{% endif %}">
+                      {{ stage | replace('_', ' ') | title }}
+                    </span>
+                  {% endfor %}
+                  {% if app_rec.status in ['rejected', 'withdrawn'] %}
+                    <span class="timeline-step is-active">{{ app_rec.status | title }}</span>
+                  {% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          {% else %}
+            {{ empty_state(
+              title="No Job Applications Submitted Yet",
+              message="When you apply for a local job, you will see its step-by-step progress (Applied, Under Review, Shortlisted, Interview Scheduled, Accepted, or Rejected) right here.",
+              action_url=url_for('public.index') ~ '#live-jobs',
+              action_label="Browse Local Jobs"
+            ) }}
+          {% endif %}
+        </section>
+
+        {# 3. Explainable Rule-Based Job Recommendations #}
+        <section aria-labelledby="recommendations-heading" style="margin-bottom: var(--space-8);">
+          <div class="section-header" style="margin-bottom: var(--space-4);">
+            <span class="eyebrow">Rule-Based Matching (Skills, Pincode, Category, Availability &amp; Wage)</span>
+            <h2 id="recommendations-heading" class="section-heading" style="margin-bottom: 0;">
+              Recommended Local Opportunities
+            </h2>
+          </div>
+
+          {% if recommended_matches %}
+            <div class="job-ledger">
+              {% for match in recommended_matches %}
+                <article class="job-ledger-row">
+                  <div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem;">
+                      <span class="badge badge-category">{{ match.job.category }}</span>
+                      {{ verification_badge(match.job.employer) }}
+                      {% for reason in match.reasons %}
+                        <span class="badge badge-verified" style="font-weight: 600;">{{ reason }}</span>
+                      {% endfor %}
+                    </div>
+                    <h3 class="job-row-title">{{ match.job.title }}</h3>
+                    <div class="job-row-meta">
+                      <span><strong>Employer:</strong> {{ match.job.employer.business_name }}</span>
+                      <span><strong>Area:</strong> {{ match.job.location }} ({{ match.job.pincode }})</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="badge badge-wage">{{ format_wage(match.job) }}</span>
+                    <div style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0.25rem;">
+                      {{ match.job.working_hours }}
+                    </div>
+                  </div>
+                  <div style="font-size: var(--text-sm);">
+                    <strong>Vacancies:</strong> {{ match.job.vacancies }}
+                  </div>
+                  <div>
+                    <a href="{{ url_for('profiles.public_employer_profile', employer_id=match.job.employer.id) }}" class="btn btn-secondary btn-sm">
+                      View Employer
+                    </a>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ empty_state(
+              title="No Active Recommendations Yet",
+              message="Update your skills, preferred categories, and 6-digit pincode in your Worker Profile to see tailored local shift matches.",
+              action_url=url_for('profiles.edit_worker_profile'),
+              action_label="Complete Worker Profile"
+            ) }}
+          {% endif %}
+        </section>
+
+        {# 4. Saved Jobs & Recent Notifications #}
+        <section aria-labelledby="saved-heading">
+          <div class="dual-manifesto">
+            <div>
+              <h2 id="saved-heading" style="font-family: var(--font-display); font-size: var(--text-h3);">
+                Saved Jobs ({{ saved_jobs | length }})
+              </h2>
+              {% if saved_jobs %}
+                {% for saved in saved_jobs %}
+                  <div class="timeline-card">
+                    <strong>{{ saved.job.title }}</strong> — {{ format_wage(saved.job) }}
+                    <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">
+                      {{ saved.job.employer.business_name }} • {{ saved.job.location }}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+                  You have not bookmarked any jobs yet.
+                </p>
+              {% endif %}
+            </div>
+
+            <div>
+              <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">
+                Recent Notifications
+              </h2>
+              {% if recent_notifications %}
+                {% for notif in recent_notifications %}
+                  <div class="timeline-card">
+                    <strong>{{ notif.title }}</strong>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0.25rem 0 0;">
+                      {{ notif.message }}
+                    </p>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+                  No notifications yet.
+                </p>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+{% endblock %}

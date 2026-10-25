@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
+
+{% block title %}All Candidate Applicants — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="all-applicants-heading">
+    <div class="container">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-6); padding-bottom: var(--space-4); border-bottom: 2px solid var(--color-border-strong);">
+        <div>
+          <span class="eyebrow">Employer Hiring Ledger</span>
+          <h1 id="all-applicants-heading" class="page-heading" style="margin-bottom: 0.25rem;">
+            Candidate Applications ({{ applications | length }})
+          </h1>
+          <p style="margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary);">
+            Review and manage candidate applications across all of your job listings.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+          <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-primary btn-sm">
+            Find Workers
+          </a>
+          <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary btn-sm">
+            Employer Dashboard
+          </a>
+        </div>
+      </div>
+
+      {% if applications %}
+        <div class="job-ledger" role="feed" aria-label="Candidate applications across all jobs">
+          {% for app_rec in applications %}
+            <article class="job-ledger-row" aria-label="Application from {{ app_rec.worker.user.full_name }}">
+              <div>
+                <span class="badge badge-category">STATUS: {{ app_rec.status | replace('_', ' ') | upper }}</span>
+                <h2 class="job-row-title" style="margin-top: 0.35rem;">
+                  <a href="{{ url_for('profiles.view_worker_profile', worker_id=app_rec.worker.id) }}">
+                    {{ app_rec.worker.user.full_name }}
+                  </a>
+                </h2>
+                <div class="job-row-meta">
+                  <span><strong>Job Listing:</strong> {{ app_rec.job.title }}</span>
+                  <span><strong>Skills:</strong> {{ app_rec.worker.skills or 'Not listed' }}</span>
+                </div>
+              </div>
+              <div style="font-size: var(--text-sm);">
+                <strong>Area:</strong> {{ app_rec.worker.preferred_location or 'Local' }} ({{ app_rec.worker.pincode or 'N/A' }})
+              </div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">
+                Applied: {{ app_rec.applied_at.strftime('%d %b %Y') }}
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                <a href="{{ url_for('applications.manage_job_applicants', job_id=app_rec.job.id) }}" class="btn btn-navy btn-sm">
+                  Manage Applicant
+                </a>
+                <a href="{{ url_for('profiles.view_worker_profile', worker_id=app_rec.worker.id) }}" class="btn btn-secondary btn-sm">
+                  View Profile
+                </a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        {{ empty_state(
+          title="No Candidate Applications Yet",
+          message="Applications submitted to your published job listings will appear here. You can also browse eligible workers directly in the Find Workers directory.",
+          action_url=url_for('profiles.find_workers'),
+          action_label="Find Workers"
+        ) }}
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,115 @@
+{# ==========================================================================
+   EARN & PAY — Reusable Accessible UI Component Macros
+   ========================================================================== #}
+
+{% macro verification_badge(employer) -%}
+  {% if employer and employer.is_genuinely_verified -%}
+    <span class="badge badge-verified" title="Employer identity and business address verified by Earn &amp; Pay moderation team">
+      <span aria-hidden="true">✓</span> Verified Employer
+    </span>
+  {% else -%}
+    <span class="badge badge-unverified" title="Standard community listing — review safety guidelines before attending interviews">
+      <span aria-hidden="true">○</span> Unverified Listing
+    </span>
+  {% endif -%}
+{%- endmacro %}
+
+
+{% macro format_wage(job) -%}
+  ₹{{ "{:,.0f}".format(job.wage_amount) }} / {{ job.wage_frequency | replace('_', ' ') }}
+{%- endmacro %}
+
+
+{% macro job_ledger_row(job, detail_url='#') -%}
+  <article class="job-ledger-row" aria-label="{{ job.title }} at {{ job.employer.business_name }}">
+    <div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.35rem;">
+        <span class="badge badge-category">{{ job.category }}</span>
+        <span class="badge badge-unverified">{{ job.job_type | replace('_', ' ') | title }}</span>
+        {{ verification_badge(job.employer) }}
+      </div>
+      <h3 class="job-row-title">
+        <a href="{{ detail_url }}">{{ job.title }}</a>
+      </h3>
+      <div class="job-row-meta">
+        <span><strong>Employer:</strong> {{ job.employer.business_name }}</span>
+        <span><strong>Location:</strong> {{ job.location }} ({{ job.pincode }})</span>
+      </div>
+    </div>
+
+    <div>
+      <span class="badge badge-wage">{{ format_wage(job) }}</span>
+      <div style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0.35rem;">
+        Hours: {{ job.working_hours }}
+      </div>
+    </div>
+
+    <div style="font-size: var(--text-sm);">
+      <div><strong>Vacancies:</strong> {{ job.vacancies }}</div>
+      <div style="color: var(--color-text-secondary); font-size: var(--text-xs);">
+        Apply by: {{ job.application_deadline.strftime('%d %b %Y') }}
+      </div>
+    </div>
+
+    <div>
+      <a href="{{ detail_url }}" class="btn btn-secondary btn-sm">
+        View Terms &amp; Apply
+      </a>
+    </div>
+  </article>
+{%- endmacro %}
+
+
+{% macro safety_notice_banner() -%}
+  <aside class="trust-charter" aria-label="Worker safety and anti-fraud notice" style="margin-block: var(--space-5);">
+    <span class="eyebrow">Mandatory Worker Protection Notice</span>
+    <h3 style="margin-bottom: var(--space-2); font-family: var(--font-display);">
+      Never Pay Money to Get a Job
+    </h3>
+    <p style="margin: 0; color: var(--color-text-secondary);">
+      Legitimate employers on Earn &amp; Pay pay you for your work—they do not ask for registration fees, uniform deposits, or upfront transfers. If any employer demands money or asks for original identity documents before hiring, report the listing immediately.
+    </p>
+  </aside>
+{%- endmacro %}
+
+
+{% macro empty_state(title, message, action_url=None, action_label=None) -%}
+  <div class="empty-state-box" role="region" aria-label="{{ title }}">
+    <span class="eyebrow">Marketplace Ledger Notice</span>
+    <h3 style="font-family: var(--font-display); margin-bottom: var(--space-2);">{{ title }}</h3>
+    <p style="color: var(--color-text-secondary); max-width: 60ch; margin-bottom: var(--space-4);">
+      {{ message }}
+    </p>
+    {% if action_url and action_label -%}
+      <a href="{{ action_url }}" class="btn btn-primary btn-sm">{{ action_label }}</a>
+    {% endif -%}
+  </div>
+{%- endmacro %}
+
+
+{% macro status_badge(status) -%}
+  {% set st = (status or '') | lower -%}
+  {% if st in ('active', 'published', 'accepted', 'verified', 'resolved') -%}
+    <span class="badge badge-verified"><span aria-hidden="true">✓</span> {{ st | replace('_', ' ') | title }}</span>
+  {% elif st in ('suspended', 'rejected', 'archived', 'deleted') -%}
+    <span class="badge badge-unverified"><span aria-hidden="true">✕</span> {{ st | replace('_', ' ') | title }}</span>
+  {% else -%}
+    <span class="badge badge-category"><span aria-hidden="true">•</span> {{ st | replace('_', ' ') | title }}</span>
+  {% endif -%}
+{%- endmacro %}
+
+
+{% macro render_field(field) -%}
+  <div class="form-group">
+    <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+    {% set css_class = "form-select" if field.type == "SelectField" else ("form-textarea" if field.type == "TextAreaField" else "form-input") -%}
+    {% if field.errors -%}
+      {{ field(class=css_class, aria_invalid="true", aria_describedby=field.id ~ "-error", **kwargs) }}
+      <div id="{{ field.id }}-error" class="form-error" role="alert">
+        {% for error in field.errors %}{{ error }}{% endfor %}
+      </div>
+    {% else -%}
+      {{ field(class=css_class, **kwargs) }}
+    {% endif -%}
+  </div>
+{%- endmacro %}

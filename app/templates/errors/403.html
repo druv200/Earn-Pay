@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}403 Access Restricted — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow" style="color: var(--color-status-danger-text);">ERROR 403 — ACCESS RESTRICTED</span>
+        <h1 class="page-heading">You do not have permission to view this page.</h1>
+        <p style="color: var(--color-text-secondary);">
+          This workspace or record belongs to another role or account. Please check that you are signed in with the appropriate Worker or Employer account.
+        </p>
+        <div style="margin-top: var(--space-5); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          {% if current_user and current_user.is_authenticated and current_user.is_employer %}
+            <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-primary">Go to Employer Dashboard</a>
+            <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-secondary">Find Workers</a>
+          {% elif current_user and current_user.is_authenticated and current_user.is_worker %}
+            <a href="{{ url_for('profiles.worker_dashboard') }}" class="btn btn-primary">Go to Worker Dashboard</a>
+            <a href="{{ url_for('jobs.job_discovery') }}" class="btn btn-secondary">Find Local Jobs</a>
+          {% else %}
+            <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Earn &amp; Pay Home</a>
+          {% endif %}
+          <a href="{{ url_for('public.help_contact') }}" class="btn btn-secondary">Contact Support</a>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

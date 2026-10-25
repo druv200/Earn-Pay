@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Job Listing{% else %}Post a Local Job Vacancy{% endif %} — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="job-form-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">Structured Vacancy Publisher</span>
+        <h1 id="job-form-heading" class="page-heading">
+          {% if is_edit %}Edit Job Listing: {{ job.title }}{% else %}Post a Local Job Vacancy{% endif %}
+        </h1>
+        <p class="lead-copy">
+          Make wages, payment frequency, working hours, and responsibilities transparent upfront so qualified local workers can apply with confidence.
+        </p>
+
+        <form
+          method="post"
+          action="{% if is_edit %}{{ url_for('jobs.edit_job', job_id=job.id) }}{% else %}{{ url_for('jobs.create_job') }}{% endif %}"
+          novalidate
+          data-prevent-double-submit
+        >
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }}</label>
+            {{ form.title(class="form-input", placeholder="e.g., Morning Counter & Tiffin Helper", required=true) }}
+            {% for error in form.title.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.category.id }}" class="form-label">{{ form.category.label.text }}</label>
+              {{ form.category(class="form-select") }}
+              {% for error in form.category.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.job_type.id }}" class="form-label">{{ form.job_type.label.text }}</label>
+              {{ form.job_type(class="form-select") }}
+              {% for error in form.job_type.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <fieldset class="form-group" style="border: 2px solid var(--color-border-strong); padding: var(--space-4); background-color: var(--color-bg-canvas);">
+            <legend class="form-label" style="padding-inline: 0.5rem;">Compensation &amp; Shift Schedule</legend>
+
+            <div class="dual-manifesto" style="gap: var(--space-4);">
+              <div class="form-group">
+                <label for="{{ form.wage_amount.id }}" class="form-label">{{ form.wage_amount.label.text }}</label>
+                {{ form.wage_amount(class="form-input", placeholder="e.g., 750.00", required=true) }}
+                {% for error in form.wage_amount.errors %}
+                  <div class="form-error" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.wage_frequency.id }}" class="form-label">{{ form.wage_frequency.label.text }}</label>
+                {{ form.wage_frequency(class="form-select") }}
+                {% for error in form.wage_frequency.errors %}
+                  <div class="form-error" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="dual-manifesto" style="gap: var(--space-4);">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.working_hours.id }}" class="form-label">{{ form.working_hours.label.text }}</label>
+                {{ form.working_hours(class="form-input", placeholder="e.g., 8:30 AM - 5:30 PM (1 hr break)", required=true) }}
+                {% for error in form.working_hours.errors %}
+                  <div class="form-error" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.vacancies.id }}" class="form-label">{{ form.vacancies.label.text }}</label>
+                {{ form.vacancies(class="form-input", type="number", min="1", max="500", required=true) }}
+                {% for error in form.vacancies.errors %}
+                  <div class="form-error" role="alert">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.location.id }}" class="form-label">{{ form.location.label.text }}</label>
+              {{ form.location(class="form-input", placeholder="e.g., Jayanagar 4th Block, Bengaluru", required=true) }}
+              {% for error in form.location.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.pincode.id }}" class="form-label">{{ form.pincode.label.text }}</label>
+              {{ form.pincode(class="form-input", placeholder="e.g., 560041", required=true) }}
+              {% for error in form.pincode.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-textarea", rows=4, placeholder="Explain the workplace environment and role context.", required=true) }}
+            {% for error in form.description.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.responsibilities.id }}" class="form-label">{{ form.responsibilities.label.text }}</label>
+            {{ form.responsibilities(class="form-textarea", rows=4, placeholder="List the exact tasks the worker will perform on shift.", required=true) }}
+            {% for error in form.responsibilities.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.required_skills.id }}" class="form-label">{{ form.required_skills.label.text }}</label>
+              {{ form.required_skills(class="form-input", placeholder="e.g., Billing, Kannada, lifting 15kg crates") }}
+              {% for error in form.required_skills.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.experience_required.id }}" class="form-label">{{ form.experience_required.label.text }}</label>
+              {{ form.experience_required(class="form-input", placeholder="e.g., Fresher OK or 6+ months") }}
+              {% for error in form.experience_required.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.application_deadline.id }}" class="form-label">{{ form.application_deadline.label.text }}</label>
+              {{ form.application_deadline(class="form-input", type="date", required=true) }}
+              {% for error in form.application_deadline.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.submit_action.id }}" class="form-label">{{ form.submit_action.label.text }}</label>
+              {{ form.submit_action(class="form-select") }}
+              {% for error in form.submit_action.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5);">
+            <button type="submit" class="btn btn-primary" data-loading-text="Saving Job Listing...">
+              {% if is_edit %}Save Changes{% else %}Continue{% endif %}
+            </button>
+            <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

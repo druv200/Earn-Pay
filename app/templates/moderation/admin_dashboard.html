@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import status_badge, verification_badge %}
+
+{% block title %}Admin &amp; Trust Operations Console — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="admin-console-heading">
+  <div class="container">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-6);">
+      <div>
+        <span class="badge badge--navy">Trust &amp; Safety Operations</span>
+        <h1 id="admin-console-heading" class="page-title" style="margin-top: var(--space-2);">
+          Admin &amp; Moderation Console
+        </h1>
+        <p style="color: var(--color-text-secondary); margin-top: var(--space-1);">
+          Monitor marketplace integrity, review suspicious job reports, and verify local employers.
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
+        <a href="{{ url_for('moderation.admin_reports') }}" class="btn btn--primary">
+          Moderation Queue ({{ metrics.open_reports }})
+        </a>
+        <a href="{{ url_for('moderation.admin_employers') }}" class="btn btn--secondary">
+          Employer Verifications ({{ metrics.pending_verifications }})
+        </a>
+      </div>
+    </header>
+
+    <!-- Operational Metrics Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8);" role="region" aria-label="Marketplace operational metrics">
+      <div class="surface-card" style="padding: var(--space-4);">
+        <div class="text-meta">Total Accounts</div>
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-navy);">{{ metrics.total_users }}</div>
+        <div class="text-meta">{{ metrics.active_workers }} workers · {{ metrics.active_employers }} employers</div>
+      </div>
+      <div class="surface-card" style="padding: var(--space-4);">
+        <div class="text-meta">Published Jobs</div>
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-navy);">{{ metrics.published_jobs }}</div>
+        <div class="text-meta">{{ metrics.archived_jobs }} archived by moderation</div>
+      </div>
+      <div class="surface-card" style="padding: var(--space-4);">
+        <div class="text-meta">Total Applications</div>
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-navy);">{{ metrics.total_applications }}</div>
+        <div class="text-meta">Tracked hiring workflows</div>
+      </div>
+      <div class="surface-card" style="padding: var(--space-4);">
+        <div class="text-meta">Open Safety Reports</div>
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-orange-hover);">{{ metrics.open_reports }}</div>
+        <div class="text-meta"><a href="{{ url_for('moderation.admin_reports', status='open') }}">Review open queue</a></div>
+      </div>
+      <div class="surface-card" style="padding: var(--space-4);">
+        <div class="text-meta">Pending Employer Reviews</div>
+        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-navy);">{{ metrics.pending_verifications }}</div>
+        <div class="text-meta"><a href="{{ url_for('moderation.admin_employers', status='pending') }}">Inspect businesses</a></div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-8);">
+      <!-- Open Moderation Reports -->
+      <section class="surface-card" style="padding: var(--space-5);" aria-labelledby="open-reports-heading">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+          <h2 id="open-reports-heading" class="section-title" style="font-size: var(--text-lg); margin: 0;">
+            Active Safety Reports
+          </h2>
+          <a href="{{ url_for('moderation.admin_reports') }}" class="text-meta">View All &rarr;</a>
+        </div>
+        {% if open_reports %}
+        <div style="display: grid; gap: var(--space-3);">
+          {% for rep in open_reports %}
+          <article style="padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-2);">
+              <strong>#{{ rep.id }} · {{ rep.target_type | upper }} #{{ rep.target_id }}</strong>
+              <span class="badge badge--warning">{{ rep.reason | replace('_', ' ') | title }}</span>
+            </div>
+            <p style="font-size: var(--text-sm); margin: var(--space-2) 0; color: var(--color-text-secondary);">
+              {{ rep.details }}
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="text-meta">Status: {{ rep.status | title }}</span>
+              <a href="{{ url_for('moderation.admin_reports') }}" class="btn btn--secondary btn--sm">Review &amp; Act</a>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-meta">No open or investigating safety reports right now.</p>
+        {% endif %}
+      </section>
+
+      <!-- Pending Employer Verifications -->
+      <section class="surface-card" style="padding: var(--space-5);" aria-labelledby="pending-emp-heading">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+          <h2 id="pending-emp-heading" class="section-title" style="font-size: var(--text-lg); margin: 0;">
+            Pending Employer Verifications
+          </h2>
+          <a href="{{ url_for('moderation.admin_employers') }}" class="text-meta">View All &rarr;</a>
+        </div>
+        {% if pending_employers %}
+        <div style="display: grid; gap: var(--space-3);">
+          {% for emp in pending_employers %}
+          <article style="padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong>{{ emp.business_name }}</strong>
+              {{ verification_badge(emp) }}
+            </div>
+            <p class="text-meta" style="margin: var(--space-1) 0;">
+              {{ emp.business_type | title }} · {{ emp.location or 'Bengaluru' }} ({{ emp.pincode or 'No pincode' }})
+              · Contact: {{ emp.contact_phone or emp.user.normalized_email }}
+            </p>
+            <form method="post" action="{{ url_for('moderation.verify_employer_action', employer_id=emp.id) }}" style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+              {{ verify_form.hidden_tag() }}
+              <input type="hidden" name="decision" value="verified">
+              <input type="hidden" name="verification_notes" value="Verified via Admin Console quick review.">
+              <button type="submit" class="btn btn--primary btn--sm">Approve Badge</button>
+              <a href="{{ url_for('moderation.admin_employers') }}" class="btn btn--secondary btn--sm">Full Review</a>
+            </form>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-meta">No employers awaiting verification review.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <!-- User Account Governance -->
+    <section class="surface-card" style="padding: var(--space-5); margin-bottom: var(--space-8);" aria-labelledby="users-governance-heading">
+      <h2 id="users-governance-heading" class="section-title" style="font-size: var(--text-lg); margin-bottom: var(--space-4);">
+        Recent Accounts &amp; Access Governance
+      </h2>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: var(--text-sm);">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border);">
+              <th style="padding: var(--space-2);">ID / Name</th>
+              <th style="padding: var(--space-2);">Email</th>
+              <th style="padding: var(--space-2);">Role</th>
+              <th style="padding: var(--space-2);">Status</th>
+              <th style="padding: var(--space-2);">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in recent_users %}
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-2);"><strong>#{{ u.id }}</strong> {{ u.full_name }}</td>
+              <td style="padding: var(--space-2);">{{ u.normalized_email }}</td>
+              <td style="padding: var(--space-2);"><span class="badge badge--neutral">{{ u.role | upper }}</span></td>
+              <td style="padding: var(--space-2);">{{ status_badge(u.account_status) }}</td>
+              <td style="padding: var(--space-2);">
+                {% if u.id != current_user.id %}
+                <form method="post" action="{{ url_for('moderation.update_user_status_action', user_id=u.id) }}" style="display: inline-flex; gap: var(--space-2); align-items: center;">
+                  {{ user_status_form.hidden_tag() }}
+                  {% if u.account_status == 'active' %}
+                  <input type="hidden" name="target_status" value="suspended">
+                  <input type="hidden" name="reason" value="Suspended by administrator">
+                  <button type="submit" class="btn btn--secondary btn--sm" data-confirm="Suspend account for {{ u.normalized_email }}?">Suspend</button>
+                  {% else %}
+                  <input type="hidden" name="target_status" value="active">
+                  <input type="hidden" name="reason" value="Reactivated by administrator">
+                  <button type="submit" class="btn btn--primary btn--sm">Reactivate</button>
+                  {% endif %}
+                </form>
+                {% else %}
+                <span class="text-meta">Current Admin</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Security & Moderation Audit Trail -->
+    <section class="surface-card" style="padding: var(--space-5);" aria-labelledby="audit-trail-heading">
+      <h2 id="audit-trail-heading" class="section-title" style="font-size: var(--text-lg); margin-bottom: var(--space-4);">
+        Immutable Security &amp; Moderation Audit Log (Latest 15 Events)
+      </h2>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: var(--text-sm);">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border);">
+              <th style="padding: var(--space-2);">Timestamp (UTC)</th>
+              <th style="padding: var(--space-2);">Action</th>
+              <th style="padding: var(--space-2);">Actor</th>
+              <th style="padding: var(--space-2);">Resource</th>
+              <th style="padding: var(--space-2);">Sanitized Metadata</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in recent_audits %}
+            <tr style="border-bottom: 1px solid var(--color-border);">
+              <td style="padding: var(--space-2);" class="text-meta">{{ ev.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td style="padding: var(--space-2);"><code>{{ ev.action }}</code></td>
+              <td style="padding: var(--space-2);">{{ ev.actor.normalized_email if ev.actor else 'System / Anonymous' }}</td>
+              <td style="padding: var(--space-2);">{{ ev.resource_type }} #{{ ev.resource_id or '-' }}</td>
+              <td style="padding: var(--space-2);" class="text-meta"><code>{{ ev.safe_metadata or {} }}</code></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}

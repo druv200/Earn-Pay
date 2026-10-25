@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import verification_badge, job_ledger_row, safety_notice_banner, empty_state %}
+
+{% block title %}{{ employer.business_name }} — Public Employer Profile — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="public-employer-heading">
+    <div class="container">
+      <div class="policy-content" style="margin-bottom: var(--space-8);">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
+          <span class="eyebrow" style="margin-bottom: 0;">Employer Directory Profile</span>
+          {{ verification_badge(employer) }}
+        </div>
+
+        <h1 id="public-employer-heading" class="page-heading">{{ employer.business_name }}</h1>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+          <strong>Category:</strong> {{ employer.business_type | title }} •
+          <strong>Location:</strong> {{ employer.location or 'Not listed' }} ({{ employer.pincode or 'N/A' }})
+        </p>
+
+        {% if employer.description %}
+          <p style="margin-top: var(--space-4);">{{ employer.description }}</p>
+        {% endif %}
+
+        {% if employer.address %}
+          <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 0;">
+            <strong>Workplace Address:</strong> {{ employer.address }}
+          </p>
+        {% endif %}
+
+        <div style="margin-top: var(--space-4);">
+          <a href="{{ url_for('moderation.submit_report', target_type='employer', target_id=employer.id) }}" class="btn btn-secondary btn-sm">
+            Report Suspicious Business Profile
+          </a>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Open Vacancies at {{ employer.business_name }}</h2>
+      {% if open_jobs %}
+        <div class="job-ledger">
+          {% for job in open_jobs %}
+            {{ job_ledger_row(job, detail_url=url_for('jobs.job_detail', job_id=job.id)) }}
+          {% endfor %}
+        </div>
+      {% else %}
+        {{ empty_state(
+          title="No Open Vacancies Right Now",
+          message="This employer does not have any currently published job listings accepting applications."
+        ) }}
+      {% endif %}
+
+      {{ safety_notice_banner() }}
+    </div>
+  </section>
+{% endblock %}

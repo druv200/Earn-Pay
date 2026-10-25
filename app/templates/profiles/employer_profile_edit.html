@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import verification_badge %}
+
+{% block title %}Edit Employer Business Profile — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="edit-employer-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2);">
+          <span class="eyebrow" style="margin-bottom: 0;">Employer Business Profile</span>
+          {{ verification_badge(employer) }}
+        </div>
+        <h1 id="edit-employer-heading" class="page-heading">Update Your Business Information</h1>
+        <p class="lead-copy">
+          Provide clear workplace location and business details so workers can apply with confidence.
+        </p>
+
+        <form method="post" action="{{ url_for('profiles.edit_employer_profile') }}" novalidate data-prevent-double-submit>
+          {{ form.hidden_tag() }}
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.business_name.id }}" class="form-label">{{ form.business_name.label.text }}</label>
+              {{ form.business_name(class="form-input", required=true) }}
+              {% for error in form.business_name.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.business_type.id }}" class="form-label">{{ form.business_type.label.text }}</label>
+              {{ form.business_type(class="form-select") }}
+              {% for error in form.business_type.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.full_name.id }}" class="form-label">{{ form.full_name.label.text }}</label>
+              {{ form.full_name(class="form-input", required=true) }}
+              {% for error in form.full_name.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.contact_phone.id }}" class="form-label">{{ form.contact_phone.label.text }}</label>
+              {{ form.contact_phone(class="form-input", placeholder="+91 98450 12345") }}
+              {% for error in form.contact_phone.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-textarea", rows=3, placeholder="Describe your shop, restaurant, or business operations.") }}
+            {% for error in form.description.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.address.id }}" class="form-label">{{ form.address.label.text }}</label>
+            {{ form.address(class="form-textarea", rows=2, placeholder="Building number, street, cross road, landmark") }}
+            {% for error in form.address.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="dual-manifesto" style="gap: var(--space-4);">
+            <div class="form-group">
+              <label for="{{ form.location.id }}" class="form-label">{{ form.location.label.text }}</label>
+              {{ form.location(class="form-input", placeholder="e.g., Jayanagar, Bengaluru") }}
+              {% for error in form.location.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.pincode.id }}" class="form-label">{{ form.pincode.label.text }}</label>
+              {{ form.pincode(class="form-input", placeholder="e.g., 560041") }}
+              {% for error in form.pincode.errors %}
+                <div class="form-error" role="alert">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <fieldset class="form-group" style="border: 2px solid var(--color-border-strong); padding: var(--space-4); background-color: var(--color-bg-sage-subtle); margin-top: var(--space-4);">
+            <legend class="form-label" style="padding-inline: 0.5rem;">Employer Verification Process</legend>
+            <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0;">
+              Current Verification Status: <strong>{{ employer.verification_status | upper }}</strong>.
+              Earn &amp; Pay displays a "Verified Employer" badge only after an administrator reviews your business details.
+            </p>
+            {% if employer.verification_status == 'unverified' %}
+              <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                {{ form.request_verification(style="width: 1.2rem; height: 1.2rem; margin-top: 0.2rem;") }}
+                <label for="{{ form.request_verification.id }}" style="font-size: var(--text-sm);">
+                  {{ form.request_verification.label.text }}
+                </label>
+              </div>
+            {% endif %}
+          </fieldset>
+
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5);">
+            <button type="submit" class="btn btn-primary" data-loading-text="Saving Business Profile...">
+              Save Business Profile
+            </button>
+            <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

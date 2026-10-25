@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Account &amp; Privacy Settings — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="settings-heading">
+    <div class="container-narrow">
+      <div class="policy-content" style="margin-bottom: var(--space-6);">
+        <span class="eyebrow">Account &amp; Privacy Overview</span>
+        <h1 id="settings-heading" class="page-heading">Account Settings</h1>
+
+        <p><strong>Full Name:</strong> {{ current_user.full_name }}</p>
+        <p><strong>Registered Email:</strong> {{ current_user.normalized_email }}</p>
+        <p><strong>Role:</strong> {{ current_user.role | title }}</p>
+        <p>
+          <strong>Email Verification:</strong>
+          {% if current_user.email_verified %}
+            <span class="badge badge-verified">✓ Verified</span>
+          {% else %}
+            <a href="{{ url_for('auth.verify_email_status') }}" class="badge badge-wage">Pending — Verify Now</a>
+          {% endif %}
+        </p>
+
+        <div style="margin-top: var(--space-4); display: flex; flex-wrap: wrap; gap: var(--space-3);">
+          {% if current_user.is_worker %}
+            <a href="{{ url_for('profiles.edit_worker_profile') }}" class="btn btn-secondary btn-sm">
+              Manage Worker Profile &amp; Privacy Toggles
+            </a>
+          {% elif current_user.is_employer %}
+            <a href="{{ url_for('profiles.edit_employer_profile') }}" class="btn btn-secondary btn-sm">
+              Manage Employer Business Profile
+            </a>
+          {% endif %}
+          <a href="{{ url_for('profiles.export_account_data') }}" class="btn btn-secondary btn-sm">
+            Download My Personal Data (JSON)
+          </a>
+        </div>
+      </div>
+
+      <div class="policy-content" style="border-color: var(--color-status-danger-text);">
+        <span class="eyebrow" style="color: var(--color-status-danger-text);">Data Rights &amp; Account Deactivation</span>
+        <h2 class="section-heading">Request Account Deletion</h2>
+        <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+          Submitting this form immediately deactivates your account, hides your public profile, closes any active job postings, and records a formal deletion request in our compliance log.
+        </p>
+
+        <form method="post" action="{{ url_for('profiles.account_settings') }}" novalidate data-prevent-double-submit>
+          {{ deletion_form.hidden_tag() }}
+
+          <div class="form-group">
+            <label for="{{ deletion_form.confirm_email.id }}" class="form-label">
+              {{ deletion_form.confirm_email.label.text }}
+            </label>
+            {{ deletion_form.confirm_email(class="form-input", placeholder=current_user.normalized_email, required=true) }}
+            {% for error in deletion_form.confirm_email.errors %}
+              <div class="form-error" role="alert">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ deletion_form.reason.id }}" class="form-label">
+              {{ deletion_form.reason.label.text }}
+            </label>
+            {{ deletion_form.reason(class="form-textarea", rows=2) }}
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            style="border-color: var(--color-status-danger-text); color: var(--color-status-danger-text);"
+            data-loading-text="Processing Deletion..."
+          >
+            Confirm &amp; Delete My Account
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

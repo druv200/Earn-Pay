@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Profile: {{ worker.user.full_name }} — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="candidate-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">Authorized Candidate Profile Summary</span>
+        <h1 id="candidate-heading" class="page-heading">{{ worker.user.full_name }}</h1>
+
+        <div class="dual-manifesto" style="gap: var(--space-4); margin-block: var(--space-4);">
+          <div>
+            <p style="margin: 0 0 0.5rem;">
+              <strong>Preferred Area:</strong> {{ worker.preferred_location or 'Not specified' }} ({{ worker.pincode or 'N/A' }})
+            </p>
+            <p style="margin: 0 0 0.5rem;">
+              <strong>Travel Distance:</strong> Up to {{ worker.travel_radius_km }} km
+            </p>
+            <p style="margin: 0;">
+              <strong>Availability:</strong> {{ worker.availability | replace('_', ' ') | title }}
+            </p>
+          </div>
+
+          <div>
+            <p style="margin: 0 0 0.5rem;">
+              <strong>Expected Daily Wage:</strong>
+              {% if worker.expected_daily_wage is not none %}
+                ₹{{ "{:,.0f}".format(worker.expected_daily_wage) }} / day
+              {% else %}
+                Negotiable / Not specified
+              {% endif %}
+            </p>
+            <p style="margin: 0;">
+              <strong>Contact Phone:</strong>
+              {% if can_see_phone and worker.phone_number %}
+                {{ worker.phone_number }}
+              {% else %}
+                <span class="badge badge-unverified">Hidden by Worker Privacy Setting</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">Skills</h2>
+        <p>{{ worker.skills or 'No specific skills listed yet.' }}</p>
+
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">Work Experience Summary</h2>
+        <p>{{ worker.experience_summary or 'No experience summary provided yet.' }}</p>
+
+        <h2 style="font-family: var(--font-display); font-size: var(--text-h3);">Preferred Categories</h2>
+        <p>{{ worker.preferred_categories or 'Open to local opportunities.' }}</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

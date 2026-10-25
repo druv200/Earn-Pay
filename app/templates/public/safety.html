@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Community &amp; Job Safety Guidelines — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="safety-heading">
+    <div class="container-narrow">
+      <span class="eyebrow">Trust &amp; Field Safety</span>
+      <h1 id="safety-heading" class="page-heading">Community &amp; Job Safety Guidelines</h1>
+      <p class="lead-copy">
+        Your safety and dignity come first. Please read these guidelines carefully before applying for work, attending interviews, or hiring candidates through Earn &amp; Pay.
+      </p>
+
+      <div class="trust-charter" style="margin-bottom: var(--space-6);">
+        <span class="eyebrow">Rule #1 for All Workers</span>
+        <h2 style="font-family: var(--font-display); margin-bottom: var(--space-2);">
+          Never Pay Any Fee to Apply, Interview, or Start Work
+        </h2>
+        <p style="margin: 0; color: var(--color-text-secondary);">
+          Any employer or agent asking for a registration fee, training charge, security deposit, or advance payment is violating platform rules. Do not send money via UPI, cash, or bank transfer, and report the listing immediately.
+        </p>
+      </div>
+
+      <div class="policy-content">
+        <h2 class="section-heading">Safety Checklist for Workers</h2>
+        <ul class="checklist">
+          <li><strong>Verify Job Details Before Travelling:</strong> Confirm the workplace address, pincode, working hours, and daily/monthly wage stated on the job page.</li>
+          <li><strong>Meet in Public Business Premises:</strong> Attend interviews during daylight or normal business hours at the shop, restaurant, or office address listed.</li>
+          <li><strong>Protect Original Identity Documents:</strong> Never hand over your original Aadhaar card, PAN card, driving license, or bank passbook to an employer to keep.</li>
+          <li><strong>Share Your Schedule:</strong> Inform a family member or trusted friend of the business name, address, and hours when attending a new shift or interview.</li>
+          <li><strong>Report Suspicious Behavior:</strong> Use the <em>Report Listing</em> button on any job page or visit <a href="{{ url_for('public.help_contact') }}">Help &amp; Support</a> if terms do not match what was advertised.</li>
+        </ul>
+
+        <h2 class="section-heading" style="margin-top: var(--space-6);">Standards for Employers</h2>
+        <ul class="checklist">
+          <li><strong>Accurate Wage &amp; Shift Terms:</strong> Honor the wage amount, payment frequency, and working hours published in your job listing.</li>
+          <li><strong>Respect Candidate Privacy:</strong> Use candidate contact details solely for evaluating and coordinating employment for the posted role.</li>
+          <li><strong>Prompt Status Updates:</strong> Update candidate statuses (Accepted, Rejected, or Shortlisted) so workers are not left waiting unnecessarily.</li>
+          <li><strong>Safe Workplace Environment:</strong> Provide a respectful, safe working environment free from harassment or unlawful deductions.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+{% endblock %}

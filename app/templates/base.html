@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{% block meta_description %}Earn &amp; Pay — Transparent local employment marketplace for part-time, temporary, and daily-wage work in {{ config.get('LAUNCH_CITY', 'Bengaluru') }}, India.{% endblock %}">
+  <title>{% block title %}Earn &amp; Pay — Local Employment Marketplace{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header" role="banner">
+    <div class="header-topbar">
+      <div class="container header-topbar-inner">
+        <span>Pilot Launch Area: <strong>{{ config.get('LAUNCH_CITY', 'Bengaluru') }}, {{ config.get('LAUNCH_COUNTRY', 'India') }}</strong></span>
+        <span>Zero Worker Fees • Upfront Wage &amp; Shift Terms</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="header-main">
+        <a href="{{ url_for('public.index') }}" class="brand-mark" aria-label="Earn and Pay Home">
+          <span class="brand-title">EARN <span class="brand-amp">&amp;</span> PAY</span>
+          <span class="brand-tag">LOCAL WORK</span>
+        </a>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          data-nav-toggle
+          aria-expanded="false"
+          aria-controls="primary-navigation"
+          aria-label="Toggle navigation menu"
+        >
+          Menu
+        </button>
+
+        <nav id="primary-navigation" class="site-nav" data-site-nav aria-label="Primary Navigation">
+          <ul class="nav-list">
+            <li>
+              <a href="{{ url_for('public.index') }}" class="nav-link" {% if request.endpoint == 'public.index' %}aria-current="page"{% endif %}>
+                Home
+              </a>
+            </li>
+
+            {% if current_user and current_user.is_authenticated %}
+              {% if current_user.is_worker %}
+                <li>
+                  <a href="{{ url_for('jobs.job_discovery') }}" class="nav-link" {% if request.endpoint == 'jobs.job_discovery' %}aria-current="page"{% endif %}>
+                    Find Local Jobs
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('profiles.worker_dashboard') }}" class="nav-link" {% if request.endpoint == 'profiles.worker_dashboard' %}aria-current="page"{% endif %}>
+                    My Applications
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('applications.saved_jobs_page') }}" class="nav-link" {% if request.endpoint == 'applications.saved_jobs_page' %}aria-current="page"{% endif %}>
+                    Saved Jobs
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('public.safety_guidelines') }}" class="nav-link" {% if request.endpoint == 'public.safety_guidelines' %}aria-current="page"{% endif %}>
+                    Safety Guidelines
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('profiles.edit_worker_profile') }}" class="nav-link" {% if request.endpoint in ('profiles.edit_worker_profile', 'profiles.account_settings') %}aria-current="page"{% endif %}>
+                    Profile and Settings
+                  </a>
+                </li>
+              {% elif current_user.is_employer %}
+                <li>
+                  <a href="{{ url_for('profiles.employer_dashboard') }}" class="nav-link" {% if request.endpoint == 'profiles.employer_dashboard' %}aria-current="page"{% endif %}>
+                    Employer Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('jobs.create_job') }}" class="nav-link" {% if request.endpoint == 'jobs.create_job' %}aria-current="page"{% endif %}>
+                    Post a Job
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('profiles.employer_dashboard') }}#manage-jobs" class="nav-link">
+                    Manage My Jobs
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('profiles.find_workers') }}" class="nav-link" {% if request.endpoint == 'profiles.find_workers' %}aria-current="page"{% endif %}>
+                    Find Workers
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('applications.employer_applicants_overview') }}" class="nav-link" {% if request.endpoint in ('applications.employer_applicants_overview', 'applications.manage_job_applicants') %}aria-current="page"{% endif %}>
+                    Applicants
+                  </a>
+                </li>
+              {% elif current_user.is_admin %}
+                <li>
+                  <a href="{{ url_for('moderation.admin_dashboard') }}" class="nav-link" {% if request.endpoint == 'moderation.admin_dashboard' %}aria-current="page"{% endif %}>
+                    Admin Console
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('moderation.admin_reports') }}" class="nav-link" {% if request.endpoint == 'moderation.admin_reports' %}aria-current="page"{% endif %}>
+                    Moderation Reports
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('moderation.admin_employers') }}" class="nav-link" {% if request.endpoint == 'moderation.admin_employers' %}aria-current="page"{% endif %}>
+                    Employer Verifications
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ url_for('public.safety_guidelines') }}" class="nav-link" {% if request.endpoint == 'public.safety_guidelines' %}aria-current="page"{% endif %}>
+                    Safety Guidelines
+                  </a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li>
+                <a href="{{ url_for('public.safety_guidelines') }}" class="nav-link" {% if request.endpoint == 'public.safety_guidelines' %}aria-current="page"{% endif %}>
+                  Safety Guidelines
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('public.about') }}" class="nav-link" {% if request.endpoint == 'public.about' %}aria-current="page"{% endif %}>
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('public.help_contact') }}" class="nav-link" {% if request.endpoint == 'public.help_contact' %}aria-current="page"{% endif %}>
+                  Help &amp; Support
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+
+          <div class="nav-actions">
+            {% if current_user and current_user.is_authenticated %}
+              <a href="{{ url_for('applications.notifications_page') }}" class="btn btn-secondary btn-sm" {% if request.endpoint == 'applications.notifications_page' %}aria-current="page"{% endif %}>
+                Notifications
+              </a>
+              <a href="{{ url_for('profiles.account_settings') }}" class="btn btn-secondary btn-sm" {% if request.endpoint == 'profiles.account_settings' %}aria-current="page"{% endif %}>
+                Settings
+              </a>
+              <form method="post" action="{{ url_for('auth.logout') }}" style="display: inline; margin: 0;">
+                {{ logout_form.hidden_tag() }}
+                <button type="submit" class="btn btn-secondary btn-sm">Sign Out</button>
+              </form>
+            {% else %}
+              <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Sign In</a>
+              <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
+            {% endif %}
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container flash-region" role="status" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="flash-banner flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button type="button" class="btn btn-secondary btn-sm" data-dismiss-flash aria-label="Dismiss notification">
+              Dismiss
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="main-content" role="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-title" style="color: var(--color-text-on-navy); margin-bottom: var(--space-2);">
+            EARN <span class="brand-amp">&amp;</span> PAY
+          </div>
+          <p style="font-size: var(--text-sm); color: #D5D9E0; max-width: 44ch; margin-top: 0;">
+            Connecting people seeking part-time, temporary, and daily-wage work with local shops, restaurants, and small businesses through transparent job terms.
+          </p>
+        </div>
+
+        {% if not (current_user and current_user.is_authenticated and current_user.is_employer) %}
+          <div>
+            <h2 class="footer-heading">For Workers</h2>
+            <ul class="footer-links">
+              {% if current_user and current_user.is_authenticated and current_user.is_worker %}
+                <li><a href="{{ url_for('jobs.job_discovery') }}">Find Local Jobs</a></li>
+                <li><a href="{{ url_for('profiles.worker_dashboard') }}">My Applications</a></li>
+              {% else %}
+                <li><a href="{{ url_for('auth.register', role='worker') }}">Register as a Worker</a></li>
+                <li><a href="{{ url_for('public.index') }}#how-it-works">How It Works</a></li>
+              {% endif %}
+              <li><a href="{{ url_for('public.safety_guidelines') }}">Worker Safety Checklist</a></li>
+            </ul>
+          </div>
+        {% endif %}
+
+        <div>
+          <h2 class="footer-heading">For Employers</h2>
+          <ul class="footer-links">
+            {% if current_user and current_user.is_authenticated and current_user.is_employer %}
+              <li><a href="{{ url_for('profiles.find_workers') }}">Find Workers</a></li>
+              <li><a href="{{ url_for('jobs.create_job') }}">Post a Job</a></li>
+              <li><a href="{{ url_for('profiles.employer_dashboard') }}">Employer Dashboard</a></li>
+            {% else %}
+              <li><a href="{{ url_for('auth.register', role='employer') }}">Hire Workers</a></li>
+              <li><a href="{{ url_for('public.about') }}">Verification Process</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('public.help_contact') }}">Report a Listing Issue</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="footer-heading">Policies &amp; Support</h2>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('public.about') }}">About Earn &amp; Pay</a></li>
+            <li><a href="{{ url_for('public.privacy_policy') }}">Privacy Policy</a></li>
+            <li><a href="{{ url_for('public.terms_of_service') }}">Terms of Service</a></li>
+            <li><a href="{{ url_for('public.help_contact') }}">Contact &amp; Escalation</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-disclaimer">
+        <p style="margin: 0 0 0.5rem;">
+          <strong>Platform Transparency Principle:</strong> Earn &amp; Pay is a local job discovery and hiring coordination marketplace. We do not promise guaranteed employment or income. Employers are marked as "Verified Employer" only after completing our documented review process; always review our <a href="{{ url_for('public.safety_guidelines') }}" style="color: var(--color-accent-orange);">Safety Guidelines</a> before attending in-person shifts. Earn &amp; Pay does not operate an internal wallet or hold user funds.
+        </p>
+        <p style="margin: 0;">&copy; {{ current_year }} Earn &amp; Pay ({{ config.get('LAUNCH_CITY', 'Bengaluru') }} Pilot). All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

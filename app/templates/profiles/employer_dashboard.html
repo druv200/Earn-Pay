@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import verification_badge, format_wage, empty_state %}
+
+{% block title %}Employer Operations Workspace — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="employer-ops-heading">
+    <div class="container">
+      {# 1. Operational Header Bar #}
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-5); padding-bottom: var(--space-5); border-bottom: 2px solid var(--color-border-strong);">
+        <div>
+          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
+            <span class="eyebrow" style="margin-bottom: 0;">Employer Operations Workspace</span>
+            {{ verification_badge(employer) }}
+          </div>
+          <h1 id="employer-ops-heading" class="page-heading" style="margin-bottom: 0.25rem;">
+            {{ employer.business_name }}
+          </h1>
+          <p style="margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary);">
+            Category: <strong>{{ employer.business_type | title }}</strong> •
+            Location: <strong>{{ employer.location or 'Add location' }} ({{ employer.pincode or 'No pincode' }})</strong> •
+            Verification State: <strong>{{ employer.verification_status | title }}</strong>
+          </p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
+          <a href="{{ url_for('profiles.find_workers') }}" class="btn btn-navy btn-sm">
+            Find Workers
+          </a>
+          <a href="{{ url_for('jobs.create_job') }}" class="btn btn-primary btn-sm">
+            + Post New Vacancy
+          </a>
+          <a href="{{ url_for('profiles.edit_employer_profile') }}" class="btn btn-secondary btn-sm">
+            Edit Business Profile
+          </a>
+          <a href="{{ url_for('profiles.public_employer_profile', employer_id=employer.id) }}" class="btn btn-secondary btn-sm">
+            View Public Business Page
+          </a>
+        </div>
+      </div>
+
+      {# 2. Live Available Workers Count & Area Filter Banner #}
+      <div class="trust-charter" role="region" aria-label="Available Workers Summary" style="margin-bottom: var(--space-6);">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-4);">
+          <div>
+            <span class="eyebrow">Database Worker Availability</span>
+            <h2 style="font-family: var(--font-display); font-size: var(--text-h3); margin: 0;">
+              {% if available_worker_count > 0 %}
+                {{ available_worker_count }} {{ 'worker' if available_worker_count == 1 else 'workers' }} available in your area{% if selected_area %} ({{ selected_area }}){% endif %}
+              {% else %}
+                No workers are currently available. Check back as more people join Earn &amp; Pay.
+              {% endif %}
+            </h2>
+          </div>
+
+          <form method="get" action="{{ url_for('profiles.employer_dashboard') }}" style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);">
+            <label for="dashboard-area-filter" class="sr-only" style="font-size: var(--text-xs); font-weight: 700;">
+              Filter by Location or Pincode
+            </label>
+            <input
+              type="text"
+              id="dashboard-area-filter"
+              name="area"
+              value="{{ selected_area }}"
+              class="form-input"
+              style="width: auto; min-width: 14rem;"
+              placeholder="Area or pincode (e.g., 560041)"
+            >
+            <button type="submit" class="btn btn-secondary btn-sm">
+              Check Area Count
+            </button>
+            {% if selected_area %}
+              <a href="{{ url_for('profiles.employer_dashboard') }}" class="btn btn-secondary btn-sm">
+                All Areas
+              </a>
+            {% endif %}
+            <a href="{{ url_for('profiles.find_workers', location=selected_area or None) }}" class="btn btn-primary btn-sm">
+              Browse Workers
+            </a>
+          </form>
+        </div>
+      </div>
+
+      {# 3. Structured 4-Column Operational Metric Strip #}
+      <div class="ops-metric-strip" role="region" aria-label="Hiring Operations Summary">
+        <div class="ops-metric-box">
+          <span class="eyebrow">Published Vacancies</span>
+          <div class="ops-metric-value">{{ active_jobs | length }}</div>
+        </div>
+        <div class="ops-metric-box">
+          <span class="eyebrow">Draft &amp; Closed Jobs</span>
+          <div class="ops-metric-value">{{ (draft_jobs | length) + (closed_jobs | length) }}</div>
+        </div>
+        <div class="ops-metric-box">
+          <span class="eyebrow">Total Applications</span>
+          <div class="ops-metric-value">{{ total_applications }}</div>
+        </div>
+        <div class="ops-metric-box" style="background-color: var(--color-bg-sage);">
+          <span class="eyebrow">Awaiting Your Review</span>
+          <div class="ops-metric-value">{{ pending_review_count }}</div>
+        </div>
+      </div>
+
+      {# 4. Active & Draft Vacancies Ledger #}
+      <div id="manage-jobs" style="margin-bottom: var(--space-8);">
+        <h2 class="section-heading">Manage My Jobs</h2>
+
+        {% if active_jobs or draft_jobs or closed_jobs %}
+          <div class="job-ledger">
+            {% for job in active_jobs + draft_jobs + closed_jobs %}
+              <article class="job-ledger-row" aria-label="{{ job.title }}">
+                <div>
+                  <div style="display: flex; gap: 0.5rem; margin-bottom: 0.35rem;">
+                    <span class="badge badge-category">{{ job.status | upper }}</span>
+                    <span class="badge badge-unverified">{{ job.category }}</span>
+                  </div>
+                  <h3 class="job-row-title">
+                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                  </h3>
+                  <div class="job-row-meta">
+                    <span>{{ job.location }} ({{ job.pincode }})</span>
+                    <span>Hours: {{ job.working_hours }}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="badge badge-wage">{{ format_wage(job) }}</span>
+                </div>
+
+                <div style="font-size: var(--text-sm);">
+                  <div><strong>Vacancies:</strong> {{ job.vacancies }}</div>
+                  <div><strong>Applicants:</strong> {{ job.applications | length }}</div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                  <a href="{{ url_for('applications.manage_job_applicants', job_id=job.id) }}" class="btn btn-navy btn-sm">
+                    Applicants ({{ job.applications | length }})
+                  </a>
+                  <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-secondary btn-sm">
+                    Edit
+                  </a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ empty_state(
+            title="No Job Listings Published Yet",
+            message="Complete your business address and contact details so local workers know where your shop, restaurant, or workplace is located.",
+            action_url=url_for('profiles.edit_employer_profile'),
+            action_label="Update Business Profile"
+          ) }}
+        {% endif %}
+      </div>
+
+      {# 5. Recent Candidate Applications #}
+      <div>
+        <h2 class="section-heading">Recent Candidate Applications</h2>
+        {% if recent_applications %}
+          <div class="job-ledger">
+            {% for app_rec in recent_applications %}
+              <article class="job-ledger-row">
+                <div>
+                  <span class="badge badge-category">{{ app_rec.status | replace('_', ' ') | upper }}</span>
+                  <h3 class="job-row-title" style="margin-top: 0.35rem;">
+                    <a href="{{ url_for('profiles.view_worker_profile', worker_id=app_rec.worker.id) }}">
+                      {{ app_rec.worker.user.full_name }}
+                    </a>
+                  </h3>
+                  <div class="job-row-meta">
+                    <span><strong>Applied for:</strong> {{ app_rec.job.title }}</span>
+                    <span><strong>Skills:</strong> {{ app_rec.worker.skills or 'Not listed' }}</span>
+                  </div>
+                </div>
+                <div style="font-size: var(--text-sm);">
+                  <strong>Pincode:</strong> {{ app_rec.worker.pincode or 'N/A' }}
+                </div>
+                <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">
+                  Applied: {{ app_rec.applied_at.strftime('%d %b %Y') }}
+                </div>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <a href="{{ url_for('applications.manage_job_applicants', job_id=app_rec.job.id) }}" class="btn btn-navy btn-sm">
+                    Review Application
+                  </a>
+                  <a href="{{ url_for('profiles.view_worker_profile', worker_id=app_rec.worker.id) }}" class="btn btn-secondary btn-sm">
+                    Candidate Profile
+                  </a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--color-text-secondary);">
+            No candidate applications received yet.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock %}
