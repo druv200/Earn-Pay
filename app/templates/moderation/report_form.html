@@ -27,7 +27,7 @@
     {% endif %}
 
     <div class="surface-card" style="padding: var(--space-6);">
-      <form method="post" action="{{ url_for('moderation.submit_report') }}" novalidate data-Safe-submit>
+      <form method="post" action="{{ url_for('moderation.submit_report') }}" novalidate data-prevent-double-submit>
         {{ form.hidden_tag() }}
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4);">

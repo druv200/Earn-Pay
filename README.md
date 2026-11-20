@@ -10,7 +10,7 @@ Earn & Pay connects people seeking part-time, temporary, and daily-wage work wit
 ## Technology Stack
 
 - **Frontend:** HTML5, CSS3 (Editorial Design System Tokens), Vanilla JavaScript, Jinja2
-- **Backend:** Python 3.12+, Flask (Application Factory + Modular Blueprints)
+- **Backend:** Python 3.12, Flask (Application Factory + Modular Blueprints)
 - **Database & ORM:** PostgreSQL 18, SQLAlchemy 2.0, Psycopg 3, Flask-Migrate (Alembic)
 - **Security & Auth:** Flask-Login, Flask-WTF (CSRF), Werkzeug password hashing, Flask-Limiter
 - **Quality & Testing:** pytest, Ruff
@@ -50,3 +50,7 @@ flask db-check
 ruff check .
 pytest
 ```
+
+## Free Deployment
+
+The project is ready for a free Render web service with Neon Postgres, Resend transactional email, and a Redis-compatible rate-limit store. Follow the complete setup in [docs/deployment.md](docs/deployment.md). Do not use Render's free Postgres for data you need to keep: it expires after 30 days.

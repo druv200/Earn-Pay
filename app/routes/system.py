@@ -29,14 +29,16 @@ def health_check():
 
 @system_bp.get("/health/db")
 def database_health_check():
-    """Database connectivity probe executing `SELECT 1` via SQLAlchemy."""
+    """Database connectivity probe without exposing driver or connection details."""
     is_healthy, detail = verify_database_connection()
+    if not is_healthy:
+        current_app.logger.warning("Database readiness probe failed")
     status_code = 200 if is_healthy else 503
     return (
         jsonify(
             {
                 "status": "ok" if is_healthy else "degraded",
-                "database": detail,
+                "database": "connected" if is_healthy else "unavailable",
                 "timestamp": datetime.now(UTC).isoformat(),
             }
         ),

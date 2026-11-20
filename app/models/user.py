@@ -253,6 +253,7 @@ class WorkerProfile(db.Model):
             name="valid_worker_availability",
         ),
         Index("ix_worker_profiles_pincode_availability", "pincode", "availability"),
+        Index("ix_worker_profiles_public_availability", "is_profile_public", "availability"),
     )
 
     id: Mapped[int] = mapped_column(PK_TYPE, primary_key=True, autoincrement=True)

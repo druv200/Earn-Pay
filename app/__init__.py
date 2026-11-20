@@ -9,6 +9,7 @@ from typing import Any
 
 import click
 from flask import Flask, Response, jsonify, render_template, request
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.extensions import csrf, db, limiter, login_manager, migrate
 from app.forms.auth_forms import LogoutForm
@@ -31,9 +32,20 @@ def create_app(
     if config_overrides:
         app.config.update(config_overrides)
 
-    # Validate production safety invariants
-    if app.config.get("ENV_NAME") == "production" and not config_overrides:
-        config_cls.validate()
+    # Validate the final effective configuration, including any overrides used
+    # by deployment wrappers. A production deployment must never start with a
+    # development secret, database, host policy, mail backend, or rate limiter.
+    if config_cls.__name__ == "ProductionConfig":
+        config_cls.validate(app.config)
+
+    proxy_count = int(app.config.get("TRUST_PROXY_COUNT", 0))
+    if proxy_count:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=proxy_count,
+            x_proto=proxy_count,
+            x_host=proxy_count,
+        )
 
     # Ensure instance and upload folders exist safely
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)

@@ -233,12 +233,27 @@ class TestLoginLogoutAndEmailVerification:
             # Issue a new token (which invalidates initial_token)
             fresh_token = issue_new_verification_token(user)
 
-        # Old replaced token is rejected
-        old_resp = client.get(f"/auth/verify-email/{initial_token}", follow_redirects=True)
+        # Opening a link is safe: scanners and prefetchers must not consume it.
+        old_page = client.get(f"/auth/verify-email/{initial_token}")
+        old_csrf = _extract_csrf_token(old_page.get_data(as_text=True))
+
+        # The old replaced token is rejected only when the user confirms it.
+        old_resp = client.post(
+            f"/auth/verify-email/{initial_token}",
+            data={"csrf_token": old_csrf},
+            follow_redirects=True,
+        )
         assert "invalid, expired, or has already been used" in old_resp.get_data(as_text=True)
 
-        # Fresh token verifies the email and sets account_status='active'
-        ok_resp = client.get(f"/auth/verify-email/{fresh_token}", follow_redirects=True)
+        # Fresh token remains valid after GET and verifies only on CSRF-protected POST.
+        fresh_page = client.get(f"/auth/verify-email/{fresh_token}")
+        assert fresh_page.status_code == 200
+        fresh_csrf = _extract_csrf_token(fresh_page.get_data(as_text=True))
+        ok_resp = client.post(
+            f"/auth/verify-email/{fresh_token}",
+            data={"csrf_token": fresh_csrf},
+            follow_redirects=True,
+        )
         assert "Your email address is now verified!" in ok_resp.get_data(as_text=True)
 
         with app.app_context():

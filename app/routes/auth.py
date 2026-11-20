@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.extensions import db, limiter
 from app.forms.auth_forms import (
+    EmailVerificationForm,
     ForgotPasswordForm,
     LoginForm,
     LogoutForm,
@@ -15,7 +26,7 @@ from app.forms.auth_forms import (
     ResetPasswordForm,
 )
 from app.models.security_and_trust import AuditEvent
-from app.models.user import normalize_user_role
+from app.models.user import User, normalize_user_role
 from app.services.auth_service import (
     authenticate_user,
     issue_new_verification_token,
@@ -24,6 +35,11 @@ from app.services.auth_service import (
     reset_password_with_token,
     validate_password_reset_token,
     verify_user_email_token,
+)
+from app.services.email_service import (
+    EmailDeliveryError,
+    send_password_reset_email,
+    send_verification_email,
 )
 from app.services.job_transactions import AuthorizationError, DomainRuleError
 from app.utils.security import is_safe_redirect_url
@@ -46,7 +62,7 @@ def register():
 
     if form.validate_on_submit():
         try:
-            user, _raw_token = register_user_account(
+            user, raw_token = register_user_account(
                 full_name=form.full_name.data or "",
                 email=form.email.data or "",
                 password=form.password.data or "",
@@ -56,10 +72,19 @@ def register():
             )
             session.permanent = True
             login_user(user)
-            flash(
-                "Account created! Please verify your email address to complete activation.",
-                "success",
-            )
+            try:
+                send_verification_email(user, raw_token)
+                flash(
+                    "Account created! Please verify your email address to complete activation.",
+                    "success",
+                )
+            except EmailDeliveryError:
+                current_app.logger.exception("Unable to send account verification email")
+                flash(
+                    "Account created, but we could not send the verification email. "
+                    "Please request a new link below.",
+                    "warning",
+                )
             return redirect(url_for("auth.verify_email_status"))
         except (DomainRuleError, AuthorizationError) as exc:
             flash(str(exc), "danger")
@@ -139,31 +164,47 @@ def resend_verification():
     form = ResendVerificationForm()
     if form.validate_on_submit():
         try:
-            issue_new_verification_token(current_user, ip_address=request.remote_addr)
-            flash("A new verification link has been issued for your email address.", "success")
+            raw_token = issue_new_verification_token(current_user, ip_address=request.remote_addr)
+            send_verification_email(current_user, raw_token)
+            flash("A new verification link has been sent to your email address.", "success")
         except DomainRuleError as exc:
             flash(str(exc), "warning")
+        except EmailDeliveryError:
+            current_app.logger.exception("Unable to resend account verification email")
+            flash("We could not send that link. Please try again shortly.", "danger")
     return redirect(url_for("auth.verify_email_status"))
 
 
-@auth_bp.get("/verify-email/<string:token>")
+@auth_bp.route("/verify-email/<string:token>", methods=["GET", "POST"])
 @limiter.limit("10 per minute")
 def verify_email_token(token: str):
-    """Consume an email verification token and mark the user's email as verified."""
-    try:
-        user = verify_user_email_token(token, ip_address=request.remote_addr)
+    """Show confirmation on GET and consume a verification token only on POST."""
+    form = EmailVerificationForm()
+    if request.method == "GET":
+        response = render_template("auth/verify_email_confirm.html", form=form, token=token)
+        return response, 200, {"Cache-Control": "no-store, max-age=0"}
+
+    if form.validate_on_submit():
+        try:
+            user = verify_user_email_token(token, ip_address=request.remote_addr)
+            flash(
+                f"Thank you, {user.full_name}. Your email address is now verified!",
+                "success",
+            )
+            if current_user.is_authenticated:
+                return redirect(url_for("auth.verify_email_status"))
+            return redirect(url_for("auth.login"))
+        except DomainRuleError as exc:
+            flash(str(exc), "danger")
+    else:
         flash(
-            f"Thank you, {user.full_name}. Your email address is now verified!",
-            "success",
+            "Unable to verify the request. Please open the link again and try once more.",
+            "danger",
         )
-        if current_user.is_authenticated:
-            return redirect(url_for("auth.verify_email_status"))
-        return redirect(url_for("auth.login"))
-    except DomainRuleError as exc:
-        flash(str(exc), "danger")
-        if current_user.is_authenticated:
-            return redirect(url_for("auth.verify_email_status"))
-        return redirect(url_for("auth.login"))
+
+    if current_user.is_authenticated:
+        return redirect(url_for("auth.verify_email_status"))
+    return redirect(url_for("auth.login"))
 
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
@@ -175,10 +216,19 @@ def forgot_password():
 
     form = ForgotPasswordForm()
     if form.validate_on_submit():
-        request_password_reset(
+        raw_token = request_password_reset(
             form.email.data or "",
             ip_address=request.remote_addr,
         )
+        if raw_token:
+            # Resolve the active account only after issuing the token. The public
+            # response remains identical whether or not an account exists.
+            normalized_email = (form.email.data or "").strip().lower()
+            user = User.query.filter_by(normalized_email=normalized_email).one()
+            try:
+                send_password_reset_email(user, raw_token)
+            except EmailDeliveryError:
+                current_app.logger.exception("Unable to send password reset email")
         # Always display the exact same message regardless of whether the email exists
         flash(
             "If an active account exists for that email address, "

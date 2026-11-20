@@ -164,6 +164,16 @@ class Job(db.Model):
         db.DateTime(timezone=True),
         nullable=True,
     )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        db.DateTime(timezone=True),
+        nullable=True,
+    )
+    is_moderation_locked: Mapped[bool] = mapped_column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=db.text("false"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -250,6 +260,12 @@ class Job(db.Model):
         self.status = "published"
         if self.published_at is None:
             self.published_at = utc_now()
+        self.closed_at = None
+
+    def close(self) -> None:
+        """Close applications and retain the timestamp for reporting and audits."""
+        self.status = "closed"
+        self.closed_at = utc_now()
 
     def __repr__(self) -> str:
         return (

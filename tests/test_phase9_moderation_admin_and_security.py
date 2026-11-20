@@ -14,6 +14,7 @@ from app.extensions import db
 from app.models import AuditEvent, EmployerProfile, Job, Notification, Report, User
 from app.services import (
     DomainRuleError,
+    change_job_status,
     create_or_promote_admin_user,
     register_user_account,
     set_user_account_status,
@@ -150,6 +151,7 @@ class TestModerationReportingAndAdminResolution:
             updated_job = db.session.get(Job, job_id)
             assert updated_job is not None
             assert updated_job.status == "archived"
+            assert updated_job.is_moderation_locked is True
 
             updated_report = db.session.get(Report, report_id)
             assert updated_report is not None
@@ -158,6 +160,14 @@ class TestModerationReportingAndAdminResolution:
 
             notifs = Notification.query.all()
             assert len(notifs) >= 2
+
+            employer = User.query.filter_by(normalized_email="suspect@example.com").one()
+            with pytest.raises(DomainRuleError, match="archived by Trust & Safety"):
+                change_job_status(
+                    employer_user=employer,
+                    job_id=job_id,
+                    target_status="published",
+                )
 
 
 class TestAdminRBACVerificationAndGovernance:

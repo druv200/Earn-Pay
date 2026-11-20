@@ -129,6 +129,9 @@ def update_job_listing(
         if not job.is_owned_by_user(employer_user):
             msg = "You do not have permission to edit this job listing."
             raise AuthorizationError(msg)
+        if job.is_moderation_locked:
+            msg = "This listing was archived by Trust & Safety and cannot be changed."
+            raise DomainRuleError(msg)
 
         job.title = title.strip()
         job.category = category.strip()
@@ -189,6 +192,9 @@ def change_job_status(
         if not job.is_owned_by_user(employer_user):
             msg = "You do not have permission to modify this job listing."
             raise AuthorizationError(msg)
+        if job.is_moderation_locked:
+            msg = "This listing was archived by Trust & Safety and cannot be changed."
+            raise DomainRuleError(msg)
 
         previous_status = job.status
         if cleaned_status == "published":
@@ -196,6 +202,8 @@ def change_job_status(
                 msg = "Cannot publish a job whose application deadline is in the past."
                 raise DomainRuleError(msg)
             job.publish()
+        elif cleaned_status == "closed":
+            job.close()
         else:
             job.status = cleaned_status
 

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Your Email Address — Earn &amp; Pay{% endblock %}
+
+{% block content %}
+  <section class="section-block" aria-labelledby="verify-heading">
+    <div class="container-narrow">
+      <div class="policy-content">
+        <span class="eyebrow">Account Security &amp; Activation</span>
+        <h1 id="verify-heading" class="page-heading">Confirm Your Email Address</h1>
+        <p class="lead-copy">
+          Select the button below to verify your address and activate your account.
+        </p>
+        <form method="post" action="{{ url_for('auth.verify_email_token', token=token) }}" data-prevent-double-submit>
+          {{ form.hidden_tag() }}
+          <button type="submit" class="btn btn-primary" data-loading-text="Verifying Email...">
+            Verify Email Address
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

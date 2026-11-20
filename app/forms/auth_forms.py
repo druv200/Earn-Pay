@@ -151,5 +151,9 @@ class ResendVerificationForm(FlaskForm):
     """CSRF-protected form to request a fresh email verification token."""
 
 
+class EmailVerificationForm(FlaskForm):
+    """CSRF-protected explicit confirmation before consuming a verification link."""
+
+
 class LogoutForm(FlaskForm):
     """CSRF-protected POST form for logging out safely."""

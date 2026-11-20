@@ -62,6 +62,28 @@ class TestConfigurationAndUrls:
         with pytest.raises(RuntimeError, match="at least 32 characters"):
             ProductionConfig.validate()
 
+    def test_production_app_validates_effective_overrides(self) -> None:
+        """Deployment wrappers cannot bypass production safety checks with overrides."""
+        safe_production_config = {
+            "SECRET_KEY": "s" * 64,
+            "SQLALCHEMY_DATABASE_URI": "postgresql+psycopg://user:pass@db.example/earn_pay",
+            "EMAIL_BACKEND": "resend",
+            "EMAIL_FROM": "Earn & Pay <noreply@example.com>",
+            "RESEND_API_KEY": "re_test_key",
+            "PUBLIC_BASE_URL": "https://earn-and-pay.example.com",
+            "TRUSTED_HOSTS": ["earn-and-pay.example.com"],
+            "TRUST_PROXY_COUNT": 1,
+            "RATELIMIT_STORAGE_URI": "redis://localhost:6379/0",
+        }
+        prod_app = create_app("production", config_overrides=safe_production_config)
+        assert prod_app.config["ENV_NAME"] == "production"
+
+        with pytest.raises(RuntimeError, match="at least 32 characters"):
+            create_app(
+                "production",
+                config_overrides={**safe_production_config, "SECRET_KEY": "unsafe"},
+            )
+
 
 class TestHealthAndDatabaseConnectivity:
     """Verify system liveness, database `SELECT 1` probe, and CLI commands."""
@@ -86,7 +108,7 @@ class TestHealthAndDatabaseConnectivity:
         assert response.status_code == 200
         payload = response.get_json()
         assert payload["status"] == "ok"
-        assert "Connected" in payload["database"]
+        assert payload["database"] == "connected"
 
     def test_verify_database_connection_helper(self, app: Flask) -> None:
         with app.app_context():

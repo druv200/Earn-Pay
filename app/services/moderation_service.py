@@ -134,7 +134,7 @@ def resolve_moderation_report(
     if cleaned_action == "listing_hidden" and report.target_type == "job" and entity is not None:
         job: Job = entity
         job.status = "archived"
-        job.closed_at = utc_now()
+        job.is_moderation_locked = True
         if owner_user is not None:
             db.session.add(
                 Notification(
@@ -295,9 +295,11 @@ def moderate_job_listing(
     previous_status = job.status
     if cleaned_status == "published":
         job.publish()
+    elif cleaned_status == "closed":
+        job.close()
     else:
         job.status = cleaned_status
-        job.closed_at = utc_now()
+        job.is_moderation_locked = True
 
     if job.employer and job.employer.user_id:
         db.session.add(

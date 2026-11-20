@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: earn-and-pay
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && flask --app wsgi:app db upgrade
+    startCommand: gunicorn --workers 1 --threads 4 --bind 0.0.0.0:$PORT --access-logfile - --error-logfile - wsgi:app
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: TRUST_PROXY_COUNT
+        value: "1"
+      - key: EMAIL_BACKEND
+        value: resend
+      - key: EMAIL_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RATELIMIT_ENABLED
+        value: "true"
+      - key: RATELIMIT_STORAGE_URI
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: SESSION_COOKIE_HTTPONLY
+        value: "true"
+      - key: SESSION_COOKIE_SAMESITE
+        value: Lax
