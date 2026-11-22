@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, abort, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
@@ -37,15 +38,23 @@ from app.utils.security import role_required
 
 applications_bp = Blueprint("applications", __name__)
 
+_INDIA_TIME_ZONE = ZoneInfo("Asia/Kolkata")
+
 
 def _parse_interview_datetime(raw_str: str | None) -> datetime | None:
+    """Parse an employer-entered India time and store it in UTC.
+
+    The form intentionally accepts the browser's ``datetime-local`` value,
+    which has no timezone marker.  Earn & Pay operates in India, so treating
+    that value as UTC would shift every interview by five and a half hours.
+    """
     if not raw_str or not raw_str.strip():
         return None
     cleaned = raw_str.strip().replace("T", " ")
     for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
         try:
             parsed = datetime.strptime(cleaned, fmt)
-            return parsed.replace(tzinfo=UTC)
+            return parsed.replace(tzinfo=_INDIA_TIME_ZONE).astimezone(UTC)
         except ValueError:
             continue
     return None

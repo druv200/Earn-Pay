@@ -422,6 +422,21 @@ class TestTransactionalApplicationAndHiringWorkflows:
             with pytest.raises(DomainRuleError, match="closed, archived, or past"):
                 submit_job_application(worker_user=worker, job_id=expired_job.id)
 
+    def test_interview_status_requires_a_scheduled_time(self, app: Flask) -> None:
+        with app.app_context():
+            worker = _create_worker_with_profile()
+            employer = _create_employer_with_profile()
+            assert employer.employer_profile is not None
+            job = _create_published_job(employer.employer_profile)
+            app_record = submit_job_application(worker_user=worker, job_id=job.id)
+
+            with pytest.raises(DomainRuleError, match="interview date and time is required"):
+                transition_application_status(
+                    actor_user=employer,
+                    application_id=app_record.id,
+                    target_status="interview_scheduled",
+                )
+
     def test_unauthorized_employer_cannot_modify_another_employers_applicants(
         self, app: Flask
     ) -> None:
@@ -466,6 +481,7 @@ class TestTransactionalApplicationAndHiringWorkflows:
             )
             assert app1.status == "accepted"
             assert single_vacancy_job.status == "closed"
+            assert single_vacancy_job.closed_at is not None
 
             # Attempting to accept a second worker when vacancy=1 is blocked
             with pytest.raises(DomainRuleError, match="vacancies for this job have already"):

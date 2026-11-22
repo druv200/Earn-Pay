@@ -6,6 +6,7 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import click
 from flask import Flask, Response, jsonify, render_template, request
@@ -101,6 +102,18 @@ def _register_security_hooks(app: Flask) -> None:
             "current_year": datetime.now(UTC).year,
             "logout_form": LogoutForm(),
         }
+
+    @app.template_filter("india_time")
+    def format_india_time(
+        value: datetime | None,
+        date_format: str = "%d %b %Y, %I:%M %p IST",
+    ) -> str:
+        """Render stored UTC timestamps in India Standard Time for marketplace users."""
+        if value is None:
+            return ""
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(ZoneInfo("Asia/Kolkata")).strftime(date_format)
 
 
 def _wants_json_response() -> bool:

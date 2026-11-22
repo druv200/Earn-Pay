@@ -259,12 +259,21 @@ class TestPhase8ApplicationsSavedJobsHiringAndNotifications:
             as_text=True
         )
 
+        with app.app_context():
+            scheduled_application = db.session.get(JobApplication, app_id)
+            assert scheduled_application is not None
+            assert scheduled_application.interview_scheduled_at is not None
+            # 10:00 entered in India Standard Time is 04:30 UTC in storage.
+            assert scheduled_application.interview_scheduled_at.hour == 4
+            assert scheduled_application.interview_scheduled_at.minute == 30
+
         # 3. Worker checks dashboard & notifications: sees interview details, not private note
         _logout(client)
         _login(client, "manju@example.com", "WorkerPass#2026")
 
         worker_dash_html = client.get("/worker/dashboard").get_data(as_text=True)
         assert "Ask for Harish at Shop #4, Vijayanagar Main Road." in worker_dash_html
+        assert "05 Nov 2026, 10:00 AM IST" in worker_dash_html
         assert "CONFIDENTIAL_EMPLOYER_NOTE_DO_NOT_SHOW_WORKER" not in worker_dash_html
 
         notif_resp = client.get("/notifications")

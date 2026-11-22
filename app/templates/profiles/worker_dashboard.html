@@ -76,7 +76,7 @@
                 <strong>{{ interview_app.job.title }}</strong> at {{ interview_app.job.employer.business_name }}
                 <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: 0.25rem;">
                   {% if interview_app.interview_scheduled_at %}
-                    <strong>Time:</strong> {{ interview_app.interview_scheduled_at.strftime('%d %b %Y, %I:%M %p UTC') }} •
+                    <strong>Time:</strong> {{ interview_app.interview_scheduled_at | india_time }} •
                   {% endif %}
                   <strong>Instructions:</strong> {{ interview_app.interview_details or 'Check with employer on arrival at business premises.' }}
                 </div>

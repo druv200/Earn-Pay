@@ -134,6 +134,14 @@ def transition_application_status(
             msg = f"Cannot transition application from '{previous_status}' to '{cleaned_target}'."
             raise DomainRuleError(msg)
 
+        if (
+            cleaned_target == "interview_scheduled"
+            and interview_scheduled_at is None
+            and application.interview_scheduled_at is None
+        ):
+            msg = "An interview date and time is required when scheduling an interview."
+            raise DomainRuleError(msg)
+
         # Race-safe vacancy enforcement when accepting a candidate
         if cleaned_target == "accepted":
             count_stmt = select(func.count(JobApplication.id)).where(
@@ -147,7 +155,7 @@ def transition_application_status(
 
             # Automatically close the job when the final vacancy is filled
             if accepted_count + 1 >= job.vacancies and job.status == "published":
-                job.status = "closed"
+                job.close()
 
         application.status = cleaned_target
         if employer_notes is not None and job.is_owned_by_user(actor_user):

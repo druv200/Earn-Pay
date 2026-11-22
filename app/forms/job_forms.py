@@ -214,7 +214,7 @@ class EmployerApplicantUpdateForm(FlaskForm):
         validators=[DataRequired()],
     )
     interview_date = StringField(
-        "Interview Date & Time (Optional, YYYY-MM-DD HH:MM)",
+        "Interview Date & Time (Optional, India Standard Time)",
         filters=[_strip_whitespace],
         validators=[Optional(), Length(max=40)],
     )

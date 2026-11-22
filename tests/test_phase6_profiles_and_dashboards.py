@@ -10,7 +10,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 
 from app.extensions import db
-from app.models import Job, User
+from app.models import EmployerProfile, Job, User, WorkerProfile
 from app.services import register_user_account, submit_job_application
 
 _CSRF_RE = re.compile(r'name="csrf_token"\s+type="hidden"\s+value="([^"]+)"')
@@ -148,6 +148,44 @@ class TestWorkerProfileDashboardAndMatching:
         assert "Skills match (billing)" in html
         assert "Meets expected daily wage (₹700)" in html
         assert "STATUS: APPLIED" in html
+
+    def test_profile_get_requests_do_not_create_database_records(
+        self, app: Flask, client: FlaskClient
+    ) -> None:
+        """Viewing a form must not create profiles for incomplete legacy accounts."""
+        with app.app_context():
+            worker = User(
+                full_name="Legacy Worker",
+                normalized_email="legacy.worker@example.com",
+                role="worker",
+                account_status="active",
+                email_verified=True,
+            )
+            worker.set_password("WorkerPass#2026")
+            employer = User(
+                full_name="Legacy Employer",
+                normalized_email="legacy.employer@example.com",
+                role="employer",
+                account_status="active",
+                email_verified=True,
+            )
+            employer.set_password("EmployerPass#2026")
+            db.session.add_all([worker, employer])
+            db.session.commit()
+
+        _login_client(client, "legacy.worker@example.com", "WorkerPass#2026")
+        assert client.get("/worker/profile").status_code == 200
+        assert client.get("/worker/dashboard", follow_redirects=False).status_code == 302
+        with app.app_context():
+            assert WorkerProfile.query.count() == 0
+
+        home_csrf = _get_csrf(client.get("/").get_data(as_text=True))
+        client.post("/auth/logout", data={"csrf_token": home_csrf})
+        _login_client(client, "legacy.employer@example.com", "EmployerPass#2026")
+        assert client.get("/employer/profile").status_code == 200
+        assert client.get("/employer/dashboard", follow_redirects=False).status_code == 302
+        with app.app_context():
+            assert EmployerProfile.query.count() == 0
 
 
 class TestEmployerWorkspaceAndPrivacyControls:

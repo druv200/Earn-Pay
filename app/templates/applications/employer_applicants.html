@@ -118,15 +118,16 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="interview-date-{{ app_rec.id }}" class="form-label">Interview Date/Time (YYYY-MM-DD HH:MM)</label>
+                      <label for="interview-date-{{ app_rec.id }}" class="form-label">Interview Date/Time (India Standard Time)</label>
                       <input
-                        type="text"
+                        type="datetime-local"
                         id="interview-date-{{ app_rec.id }}"
                         name="interview_date"
-                        value="{{ app_rec.interview_scheduled_at.strftime('%Y-%m-%d %H:%M') if app_rec.interview_scheduled_at else '' }}"
+                        value="{{ app_rec.interview_scheduled_at | india_time('%Y-%m-%dT%H:%M') if app_rec.interview_scheduled_at else '' }}"
                         class="form-input"
-                        placeholder="e.g., 2026-11-01 10:30"
+                        aria-describedby="interview-time-help-{{ app_rec.id }}"
                       >
+                      <small id="interview-time-help-{{ app_rec.id }}">Times are entered and shown in IST.</small>
                     </div>
 
                     <div class="form-group">

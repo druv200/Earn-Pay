@@ -63,9 +63,10 @@ def worker_dashboard():
     """Render personalized Worker workspace with status timeline and explainable job matches."""
     worker_profile = current_user.worker_profile
     if worker_profile is None:
-        worker_profile = WorkerProfile(user_id=current_user.id)
-        db.session.add(worker_profile)
-        db.session.commit()
+        # A normal registration always creates this profile.  Do not create
+        # database records in a GET handler for legacy/incomplete accounts.
+        flash("Please complete your worker profile before opening the dashboard.", "warning")
+        return redirect(url_for("profiles.edit_worker_profile"))
 
     apps_stmt = (
         select(JobApplication)
@@ -116,9 +117,9 @@ def edit_worker_profile():
     """Render and process the Worker profile and privacy controls editor."""
     profile = current_user.worker_profile
     if profile is None:
+        # Keep the GET request read-only.  update_worker_profile() creates the
+        # profile only after a valid, CSRF-protected POST.
         profile = WorkerProfile(user_id=current_user.id)
-        db.session.add(profile)
-        db.session.commit()
 
     form = WorkerProfileForm()
     if request.method == "GET":
@@ -172,12 +173,9 @@ def employer_dashboard():
     """Render structured Employer Operations Workspace."""
     employer_profile = current_user.employer_profile
     if employer_profile is None:
-        employer_profile = EmployerProfile(
-            user_id=current_user.id,
-            business_name=f"{current_user.full_name}'s Business",
-        )
-        db.session.add(employer_profile)
-        db.session.commit()
+        # Keep GET requests read-only for incomplete legacy accounts.
+        flash("Please complete your business profile before opening the dashboard.", "warning")
+        return redirect(url_for("profiles.edit_employer_profile"))
 
     jobs_stmt = (
         select(Job)
@@ -281,12 +279,12 @@ def edit_employer_profile():
     """Render and process the Employer business profile editor."""
     employer = current_user.employer_profile
     if employer is None:
+        # This transient object supplies form defaults only.  The service
+        # creates the persisted profile after a valid POST.
         employer = EmployerProfile(
             user_id=current_user.id,
             business_name=f"{current_user.full_name}'s Business",
         )
-        db.session.add(employer)
-        db.session.commit()
 
     form = EmployerProfileForm()
     if request.method == "GET":
