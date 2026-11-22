@@ -7,12 +7,12 @@ This repository includes `render.yaml` for a single, free Render web service. It
 1. Create a free Neon Postgres project in the region nearest to the users. Copy its pooled or direct `postgresql://...` connection string. The application normalizes that value to the Psycopg 3 URL form automatically.
 2. Create a free Resend account, verify a sending domain, and create an API key. The application sends verification and password-reset messages over HTTPS, which works on Render's free plan.
 3. Create a free Render account and connect the Git repository that contains this project.
-4. Create a free Render Key Value instance in the same region and copy its Redis-compatible connection string. It is required by this production configuration so rate limits have one shared store instead of resetting per process restart.
+4. The included Blueprint creates a free Render Key Value instance in the same region as the web service and connects it automatically. It stores only disposable rate-limit counters, never user accounts or marketplace data.
 
 ## Deploy
 
-1. Change `name` in `render.yaml` to a globally unique service name, then push the repository to GitHub or GitLab.
-2. In Render, select **New → Blueprint** and select the repository. Render reads `render.yaml` and creates the free web service.
+1. Change the web-service `name` in `render.yaml` to a globally unique service name (for example, `earn-pay-puras`). This name becomes part of the `onrender.com` address. Then push the repository to GitHub or GitLab.
+2. In Render, select **New → Blueprint** and select the repository. Render reads `render.yaml` and creates both the free web service and its free Key Value instance.
 3. Before the first deploy, set these secret environment variables in Render:
 
    | Variable | Value |
@@ -22,9 +22,8 @@ This repository includes `render.yaml` for a single, free Render web service. It
    | `TRUSTED_HOSTS` | `your-service.onrender.com` (add custom domains separated by commas). |
    | `EMAIL_FROM` | A Resend-verified sender, e.g. `Earn & Pay <noreply@yourdomain.com>`. |
    | `RESEND_API_KEY` | Resend API key. |
-   | `RATELIMIT_STORAGE_URI` | Redis-compatible URL from Render Key Value or another managed Redis-compatible service. |
 
-   Render generates `SECRET_KEY` automatically. Do not set the placeholder from `.env.example`.
+   Render generates `SECRET_KEY` automatically. Do not set the placeholder from `.env.example`. `RATELIMIT_STORAGE_URI` is wired automatically from the Key Value instance; do not add it manually.
 4. Deploy. The build command installs dependencies and runs `flask db upgrade` before starting Gunicorn. Check `https://your-service.onrender.com/health`; it should return `status: ok`.
 5. In a browser, register one Worker and one Employer. Confirm the verification email, sign in, post a test job, apply, and test password reset before sharing the URL.
 
